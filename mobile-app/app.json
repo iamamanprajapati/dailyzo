@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Dailyzo",
+    "slug": "dailyzo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "dailyzo",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#10b981",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dailyzo.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to deliver groceries to your door."
+      }
+    },
+    "android": {
+      "package": "com.dailyzo.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "web": { "favicon": "./assets/favicon.png" },
+    "extra": {
+      "API_URL": "http://192.168.1.18:5000"
+    },
+    "plugins": ["expo-location"]
+  }
+}

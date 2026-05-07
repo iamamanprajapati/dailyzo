@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Dailyzo Rider",
+    "slug": "dailyzo-rider",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "dailyzorider",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#0f172a",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dailyzo.rider",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We use your location to share live tracking with customers and route you to deliveries.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We share your live location with customers while you're on duty so they can track their order.",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
+    },
+    "android": {
+      "package": "com.dailyzo.rider",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE"
+      ]
+    },
+    "web": { "favicon": "./assets/favicon.png" },
+    "extra": {
+      "API_URL": "http://192.168.1.18:5000"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Dailyzo Rider to use your location to send live updates to customers."
+        }
+      ]
+    ]
+  }
+}
