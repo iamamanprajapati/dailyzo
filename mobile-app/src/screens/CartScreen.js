@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: fontSize.md, color: colors.textMuted, marginTop: 6, textAlign: 'center' },
   deliveryCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#fff', padding: 14, marginTop: 56,
+    backgroundColor: '#fff', padding: 14,marginTop:12
   },
   deliveryIcon: {
     width: 36, height: 36, borderRadius: 18,

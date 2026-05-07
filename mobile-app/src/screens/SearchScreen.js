@@ -82,11 +82,11 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  searchBar: { padding: 12, paddingTop: 56, backgroundColor: '#fff', borderBottomWidth: 1, borderColor: colors.border },
+  searchBar: { paddingHorizontal: 12,paddingVertical:12,  backgroundColor: '#fff', borderBottomWidth: 1, borderColor: colors.border },
   input: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: '#fff',
-    borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12,
+    borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 6,
     borderWidth: 1, borderColor: colors.border,
   },
   inputText: { flex: 1, fontSize: fontSize.md, color: colors.text },

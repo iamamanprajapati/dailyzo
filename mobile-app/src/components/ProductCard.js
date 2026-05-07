@@ -37,7 +37,7 @@ export default function ProductCard({ product, onPress }) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.card, shadow.card, pressed && { transform: [{ scale: 0.98 }] }]}
+      style={({ pressed }) => [styles.card,  pressed && { transform: [{ scale: 0.98 }] }]}
     >
       {discount > 0 && !soldOut && (
         <View style={styles.discountTag}>

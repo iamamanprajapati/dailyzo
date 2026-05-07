@@ -32,7 +32,7 @@ export default function CategoriesScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         renderItem={({ item }) => (
           <Pressable
-            style={({ pressed }) => [styles.card, shadow.card, pressed && { transform: [{ scale: 0.97 }] }]}
+            style={({ pressed }) => [styles.card, pressed && { transform: [{ scale: 0.97 }] }]}
             onPress={() => nav.navigate('CategoryProducts', { category: item })}
           >
             <View style={styles.imageBox}>
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: radius.lg,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: .5,
     borderColor: colors.border,
   },
   imageBox: {
