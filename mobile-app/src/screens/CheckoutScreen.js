@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+
 import api from '../api/client';
 import { useAuth } from '../store/auth';
 import { useCart } from '../store/cart';
 import Button from '../components/Button';
-import { colors, fontSize, radius } from '../theme';
+import { colors, fontSize, radius, shadow } from '../theme';
 import { inr } from '../utils/format';
 
 const PAYMENT_METHODS = [
-  { id: 'cod', label: 'Cash on Delivery', sub: 'Pay when you receive', emoji: '💵' },
-  { id: 'upi', label: 'UPI / GPay / PhonePe', sub: 'Instant payment', emoji: '📱' },
-  { id: 'razorpay', label: 'Razorpay (Card/Netbanking)', sub: 'All payment methods', emoji: '💳' },
-  { id: 'wallet', label: 'BB Wallet', sub: 'Use wallet balance', emoji: '👛' },
+  { id: 'cod', label: 'Cash on Delivery', sub: 'Pay when you receive', icon: 'cash-outline', iconLib: 'ion', color: '#10b981' },
+  { id: 'upi', label: 'UPI / GPay / PhonePe', sub: 'Instant payment', icon: 'cellphone', iconLib: 'mci', color: '#3b82f6' },
+  { id: 'razorpay', label: 'Card / Netbanking', sub: 'Razorpay secure checkout', icon: 'cc-visa', iconLib: 'fa', color: '#8b5cf6' },
+  { id: 'wallet', label: 'Dailyzo Wallet', sub: 'Use wallet balance', icon: 'wallet-outline', iconLib: 'ion', color: '#f59e0b' },
 ];
+
+function PaymentIcon({ method, color }) {
+  const props = { size: 22, color };
+  if (method.iconLib === 'mci') return <MaterialCommunityIcons name={method.icon} {...props} />;
+  if (method.iconLib === 'fa') return <FontAwesome5 name={method.icon} {...props} />;
+  return <Ionicons name={method.icon} {...props} />;
+}
 
 export default function CheckoutScreen() {
   const nav = useNavigation();
@@ -89,17 +98,22 @@ export default function CheckoutScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 110 }}>
-        <View style={styles.section}>
+        <View style={[styles.section, shadow.card]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>📍 Delivery address</Text>
-            <Pressable onPress={() => nav.navigate('AddAddress')}>
-              <Text style={styles.addBtn}>+ Add new</Text>
+            <View style={styles.sectionTitleRow}>
+              <Ionicons name="location" size={18} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Delivery address</Text>
+            </View>
+            <Pressable onPress={() => nav.navigate('AddAddress')} style={styles.addBtnRow}>
+              <Ionicons name="add" size={16} color={colors.primary} />
+              <Text style={styles.addBtn}>Add new</Text>
             </Pressable>
           </View>
 
           {addresses.length === 0 ? (
             <Pressable style={styles.addAddressBox} onPress={() => nav.navigate('AddAddress')}>
-              <Text style={styles.addAddressText}>+ Add your first address</Text>
+              <Ionicons name="location-outline" size={20} color={colors.primary} />
+              <Text style={styles.addAddressText}>Add your first address</Text>
             </Pressable>
           ) : (
             addresses.map((a) => (
@@ -112,7 +126,14 @@ export default function CheckoutScreen() {
                   {selectedAddrId === a._id && <View style={styles.radioDot} />}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.addrLabel}>{a.label}</Text>
+                  <View style={styles.addrLabelRow}>
+                    <Ionicons
+                      name={a.label?.toLowerCase() === 'work' ? 'briefcase' : 'home'}
+                      size={12} color={colors.primary}
+                    />
+                    <Text style={styles.addrLabel}>{a.label}</Text>
+                    {a.isDefault && <Text style={styles.defaultPill}>DEFAULT</Text>}
+                  </View>
                   <Text style={styles.addrText}>{a.line1}{a.line2 ? `, ${a.line2}` : ''}</Text>
                   <Text style={styles.addrText}>{a.city}, {a.state} {a.pincode}</Text>
                 </View>
@@ -121,44 +142,65 @@ export default function CheckoutScreen() {
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎟️ Apply coupon</Text>
+        <View style={[styles.section, shadow.card]}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="ticket" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Apply coupon</Text>
+          </View>
           <View style={styles.couponRow}>
-            <Text
+            <TextInput
               style={styles.couponInput}
-              onPress={() => Alert.prompt?.('Coupon', 'Enter code', (t) => setCoupon((t || '').toUpperCase()))}
-            >
-              {coupon || 'Tap to enter (try WELCOME50)'}
-            </Text>
-            <Button title="Apply" variant="outline" onPress={applyCoupon} style={{ paddingVertical: 10 }} />
+              placeholder="Try WELCOME50 or SAVE10"
+              placeholderTextColor={colors.textLight}
+              value={coupon}
+              onChangeText={(t) => setCoupon(t.toUpperCase())}
+              autoCapitalize="characters"
+            />
+            <Button title="Apply" variant="outline" onPress={applyCoupon} style={{ paddingVertical: 11 }} />
           </View>
           {appliedCoupon && (
-            <Text style={styles.couponApplied}>✓ {appliedCoupon.code} — saved {inr(couponDiscount)}</Text>
+            <View style={styles.couponApplied}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+              <Text style={styles.couponAppliedText}>
+                {appliedCoupon.code} applied — saved {inr(couponDiscount)}
+              </Text>
+            </View>
           )}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💳 Payment method</Text>
-          {PAYMENT_METHODS.map((m) => (
-            <Pressable
-              key={m.id}
-              style={[styles.payCard, paymentMethod === m.id && styles.payCardSelected]}
-              onPress={() => setPaymentMethod(m.id)}
-            >
-              <Text style={{ fontSize: 22, marginRight: 12 }}>{m.emoji}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.payLabel}>{m.label}</Text>
-                <Text style={styles.paySub}>{m.sub}</Text>
-              </View>
-              <View style={styles.radio}>
-                {paymentMethod === m.id && <View style={styles.radioDot} />}
-              </View>
-            </Pressable>
-          ))}
+        <View style={[styles.section, shadow.card]}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="card" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Payment method</Text>
+          </View>
+          {PAYMENT_METHODS.map((m) => {
+            const selected = paymentMethod === m.id;
+            return (
+              <Pressable
+                key={m.id}
+                style={[styles.payCard, selected && styles.payCardSelected]}
+                onPress={() => setPaymentMethod(m.id)}
+              >
+                <View style={[styles.payIconBox, { backgroundColor: m.color + '18' }]}>
+                  <PaymentIcon method={m} color={m.color} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.payLabel}>{m.label}</Text>
+                  <Text style={styles.paySub}>{m.sub}</Text>
+                </View>
+                <View style={styles.radio}>
+                  {selected && <View style={styles.radioDot} />}
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🧾 Bill</Text>
+        <View style={[styles.section, shadow.card]}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="receipt" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Bill details</Text>
+          </View>
           <BillRow label="Item total" value={inr(mrpTotal)} />
           <BillRow label="Item discount" value={`− ${inr(itemDiscount)}`} positive />
           {couponDiscount > 0 && <BillRow label={`Coupon ${appliedCoupon?.code}`} value={`− ${inr(couponDiscount)}`} positive />}
@@ -175,7 +217,7 @@ export default function CheckoutScreen() {
           <Text style={styles.footerTotal}>{inr(total)}</Text>
         </View>
         <Button
-          title={placing ? 'Placing…' : 'Place Order  →'}
+          title={placing ? 'Placing…' : 'Place Order'}
           loading={placing}
           onPress={placeOrder}
           style={{ flex: 1, marginLeft: 16 }}
@@ -193,32 +235,65 @@ const BillRow = ({ label, value, positive, bold }) => (
 );
 
 const billStyles = StyleSheet.create({
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5 },
   label: { fontSize: fontSize.md, color: colors.textMuted },
-  value: { fontSize: fontSize.md, color: colors.text, fontWeight: '500' },
+  value: { fontSize: fontSize.md, color: colors.text, fontWeight: '600' },
   bold: { fontWeight: '800', color: colors.text, fontSize: fontSize.lg },
   positive: { color: colors.success, fontWeight: '700' },
 });
 
 const styles = StyleSheet.create({
-  section: { backgroundColor: '#fff', padding: 16, marginTop: 8 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: 12 },
-  addBtn: { color: colors.primary, fontWeight: '700' },
-  addAddressBox: { borderWidth: 1.5, borderColor: colors.primary, borderStyle: 'dashed', borderRadius: radius.md, padding: 20, alignItems: 'center' },
+  section: { backgroundColor: '#fff', padding: 16, marginTop: 8, marginHorizontal: 12, borderRadius: radius.lg },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionTitle: { fontSize: fontSize.lg, fontWeight: '800', color: colors.text },
+  addBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  addBtn: { color: colors.primary, fontWeight: '800', fontSize: fontSize.sm },
+  addAddressBox: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1.5, borderColor: colors.primary, borderStyle: 'dashed',
+    borderRadius: radius.md, padding: 20,
+  },
   addAddressText: { color: colors.primary, fontWeight: '700' },
-  addrCard: { flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: 14, marginBottom: 8, alignItems: 'flex-start' },
-  addrCardSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft + '40' },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.primary, marginRight: 12, marginTop: 2, alignItems: 'center', justifyContent: 'center' },
+  addrCard: {
+    flexDirection: 'row', borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.md, padding: 14, marginBottom: 8, alignItems: 'flex-start',
+  },
+  addrCardSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft + '30' },
+  radio: {
+    width: 22, height: 22, borderRadius: 11, borderWidth: 2,
+    borderColor: colors.primary, marginRight: 12, marginTop: 2,
+    alignItems: 'center', justifyContent: 'center',
+  },
   radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary },
-  addrLabel: { fontWeight: '700', color: colors.text },
+  addrLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  addrLabel: { fontWeight: '800', color: colors.text },
+  defaultPill: {
+    fontSize: 9, color: colors.primaryDark, fontWeight: '800',
+    backgroundColor: colors.primarySoft, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4,
+    letterSpacing: 0.5,
+  },
   addrText: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
   couponRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  couponInput: { flex: 1, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 12, borderRadius: radius.md, color: colors.text },
-  couponApplied: { color: colors.success, fontWeight: '700', marginTop: 8 },
-  payCard: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: 14, marginBottom: 8 },
-  payCardSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft + '40' },
-  payLabel: { fontWeight: '600', color: colors.text },
+  couponInput: {
+    flex: 1, borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: 12, paddingVertical: 12, borderRadius: radius.md,
+    color: colors.text, fontSize: fontSize.md, fontWeight: '700',
+  },
+  couponApplied: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    marginTop: 10, paddingHorizontal: 12, paddingVertical: 8,
+    backgroundColor: colors.primarySoft, borderRadius: radius.sm, alignSelf: 'flex-start',
+  },
+  couponAppliedText: { color: colors.success, fontWeight: '700', fontSize: fontSize.sm },
+  payCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.md, padding: 12, marginBottom: 8,
+  },
+  payCardSelected: { borderColor: colors.primary, backgroundColor: colors.primarySoft + '30' },
+  payIconBox: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  payLabel: { fontWeight: '700', color: colors.text },
   paySub: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 8 },
   footer: {
@@ -227,5 +302,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
   },
   footerTotal: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text },
-  footerSub: { fontSize: 10, color: colors.textMuted, fontWeight: '700' },
+  footerSub: { fontSize: 10, color: colors.textMuted, fontWeight: '700', letterSpacing: 0.5 },
 });

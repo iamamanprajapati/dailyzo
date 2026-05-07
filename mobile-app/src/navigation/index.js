@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../store/auth';
 import { colors } from '../theme';
@@ -22,45 +22,39 @@ import AccountScreen from '../screens/AccountScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function TabIcon({ emoji, focused }) {
-  return (
-    <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
-    </View>
-  );
-}
+const TAB_ICONS = {
+  Home: { active: 'home', inactive: 'home-outline' },
+  Categories: { active: 'grid', inactive: 'grid-outline' },
+  Orders: { active: 'receipt', inactive: 'receipt-outline' },
+  Account: { active: 'person', inactive: 'person-outline' },
+};
 
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { borderTopColor: colors.border, paddingTop: 6, paddingBottom: 8, height: 64 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-      }}
+        tabBarStyle: {
+          borderTopColor: colors.border,
+          paddingTop: 8,
+          paddingBottom: 10,
+          height: 68,
+          backgroundColor: '#fff',
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', marginTop: -2 },
+        tabBarIcon: ({ focused, color }) => {
+          const set = TAB_ICONS[route.name];
+          const name = focused ? set.active : set.inactive;
+          return <Ionicons name={name} size={24} color={color} />;
+        },
+      })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
-      />
-      <Tab.Screen
-        name="Categories"
-        component={CategoriesScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🗂️" focused={focused} /> }}
-      />
-      <Tab.Screen
-        name="Orders"
-        component={OrdersScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="📦" focused={focused} /> }}
-      />
-      <Tab.Screen
-        name="Account"
-        component={AccountScreen}
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} /> }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Categories" component={CategoriesScreen} />
+      <Tab.Screen name="Orders" component={OrdersScreen} />
+      <Tab.Screen name="Account" component={AccountScreen} />
     </Tab.Navigator>
   );
 }

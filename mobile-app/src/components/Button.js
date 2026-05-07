@@ -39,5 +39,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: { fontSize: fontSize.lg, fontWeight: '600' },
+  text: { fontSize: fontSize.lg, fontWeight: '700', letterSpacing: 0.2 },
 });

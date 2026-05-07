@@ -1,18 +1,21 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
 import { useAuth } from '../store/auth';
 import Button from '../components/Button';
-import { colors, fontSize, radius } from '../theme';
+import { colors, fontSize, radius, shadow } from '../theme';
 
 const ITEMS = [
-  { icon: '📦', label: 'My Orders', screen: 'Orders' },
-  { icon: '📍', label: 'Saved Addresses', screen: 'AddAddress' },
-  { icon: '🎫', label: 'Coupons & Offers' },
-  { icon: '👛', label: 'BB Wallet' },
-  { icon: '⭐', label: 'Ratings & Reviews' },
-  { icon: '🎁', label: 'Refer & Earn' },
-  { icon: '💬', label: 'Help & Support' },
-  { icon: 'ℹ️', label: 'About Dailyzo' },
+  { icon: 'receipt-outline', label: 'My Orders', screen: 'Orders', color: '#3b82f6' },
+  { icon: 'location-outline', label: 'Saved Addresses', screen: 'AddAddress', color: '#10b981' },
+  { icon: 'pricetag-outline', label: 'Coupons & Offers', color: '#f59e0b' },
+  { icon: 'wallet-outline', label: 'Dailyzo Wallet', color: '#8b5cf6' },
+  { icon: 'star-outline', label: 'Ratings & Reviews', color: '#f97316' },
+  { icon: 'gift-outline', label: 'Refer & Earn', color: '#ec4899' },
+  { icon: 'chatbubble-ellipses-outline', label: 'Help & Support', color: '#06b6d4' },
+  { icon: 'information-circle-outline', label: 'About Dailyzo', color: '#64748b' },
 ];
 
 export default function AccountScreen() {
@@ -22,7 +25,9 @@ export default function AccountScreen() {
   if (!user) {
     return (
       <View style={styles.empty}>
-        <Text style={{ fontSize: 60 }}>👤</Text>
+        <View style={styles.emptyIcon}>
+          <Ionicons name="person-outline" size={48} color={colors.primary} />
+        </View>
         <Text style={styles.emptyText}>Sign in to access your account</Text>
       </View>
     );
@@ -30,65 +35,106 @@ export default function AccountScreen() {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.surface }} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.header}>
-        <View style={styles.avatar}><Text style={{ fontSize: 28, color: colors.primary, fontWeight: '800' }}>{user.name?.[0]}</Text></View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name}>{user.name}</Text>
+      <LinearGradient colors={['#dcfce7', '#fff']} style={styles.header}>
+        <View style={[styles.avatar, shadow.card]}>
+          <Text style={{ fontSize: 30, color: colors.primaryDark, fontWeight: '800' }}>{user.name?.[0]}</Text>
+        </View>
+        <Text style={styles.name}>{user.name}</Text>
+        <View style={styles.contactRow}>
+          <Ionicons name="call-outline" size={12} color={colors.textMuted} />
           <Text style={styles.contact}>{user.phone || user.email}</Text>
         </View>
+      </LinearGradient>
+
+      <View style={[styles.statsRow, shadow.card]}>
+        <Stat icon="cube-outline" label="Orders" value="View" onPress={() => nav.navigate('Orders')} />
+        <View style={styles.statDivider} />
+        <Stat icon="wallet-outline" label="Wallet" value={`₹${user.walletBalance || 0}`} />
+        <View style={styles.statDivider} />
+        <Stat icon="location-outline" label="Addresses" value={user.addresses?.length || 0} onPress={() => nav.navigate('AddAddress')} />
       </View>
 
-      <View style={styles.statsRow}>
-        <Stat icon="📦" label="Orders" value={'View'} onPress={() => nav.navigate('Orders')} />
-        <Stat icon="👛" label="BBWallet" value={`₹${user.walletBalance || 0}`} />
-        <Stat icon="📍" label="Addresses" value={user.addresses?.length || 0} onPress={() => nav.navigate('AddAddress')} />
-      </View>
-
-      <View style={styles.menu}>
-        {ITEMS.map((item) => (
-          <Pressable
-            key={item.label}
-            style={styles.menuRow}
-            onPress={() => item.screen && nav.navigate(item.screen)}
-          >
-            <Text style={{ fontSize: 22, marginRight: 14 }}>{item.icon}</Text>
-            <Text style={styles.menuLabel}>{item.label}</Text>
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
-        ))}
+      <View style={[styles.menu, shadow.card]}>
+        {ITEMS.map((item, idx) => {
+          const isLast = idx === ITEMS.length - 1;
+          return (
+            <Pressable
+              key={item.label}
+              style={({ pressed }) => [
+                styles.menuRow,
+                isLast && { borderBottomWidth: 0 },
+                pressed && { backgroundColor: colors.surface },
+              ]}
+              onPress={() => item.screen && nav.navigate(item.screen)}
+            >
+              <View style={[styles.menuIconBox, { backgroundColor: item.color + '18' }]}>
+                <Ionicons name={item.icon} size={18} color={item.color} />
+              </View>
+              <Text style={styles.menuLabel}>{item.label}</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+            </Pressable>
+          );
+        })}
       </View>
 
       <Button title="Logout" variant="outline" onPress={logout} style={{ margin: 16 }} />
-      <Text style={styles.version}>Dailyzo v1.0.0</Text>
+      <View style={styles.versionRow}>
+        <MaterialCommunityIcons name="leaf" size={14} color={colors.primary} />
+        <Text style={styles.version}>Dailyzo v1.0.0</Text>
+      </View>
     </ScrollView>
   );
 }
 
 const Stat = ({ icon, label, value, onPress }) => (
   <Pressable onPress={onPress} style={styles.statCard}>
-    <Text style={{ fontSize: 24 }}>{icon}</Text>
-    <Text style={styles.statValue}>{value}</Text>
+    <View style={styles.statIconBox}>
+      <Ionicons name={icon} size={18} color={colors.primary} />
+    </View>
+    <Text style={styles.statValue} numberOfLines={1}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
   </Pressable>
 );
 
 const styles = StyleSheet.create({
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  emptyText: { fontSize: fontSize.lg, fontWeight: '700', marginTop: 16 },
-  header: {
-    paddingTop: 56, padding: 16, backgroundColor: '#fff',
-    flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: colors.border,
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, backgroundColor: colors.surface },
+  emptyIcon: {
+    width: 96, height: 96, borderRadius: 48, backgroundColor: colors.primarySoft,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
   },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
-  name: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text },
-  contact: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
-  statsRow: { flexDirection: 'row', backgroundColor: '#fff', padding: 8, borderBottomWidth: 1, borderColor: colors.border },
-  statCard: { flex: 1, alignItems: 'center', padding: 10 },
-  statValue: { fontSize: fontSize.md, fontWeight: '700', marginTop: 4 },
+  emptyText: { fontSize: fontSize.lg, fontWeight: '700', marginTop: 8, color: colors.text },
+  header: { paddingTop: 60, paddingHorizontal: 16, paddingBottom: 30, alignItems: 'center' },
+  avatar: {
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: '#fff',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 3, borderColor: colors.primary,
+  },
+  name: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text, marginTop: 12 },
+  contactRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  contact: { fontSize: fontSize.sm, color: colors.textMuted, fontWeight: '600' },
+  statsRow: {
+    flexDirection: 'row', backgroundColor: '#fff',
+    marginHorizontal: 12, marginTop: -16,
+    borderRadius: radius.lg, padding: 12,
+  },
+  statCard: { flex: 1, alignItems: 'center', paddingVertical: 4 },
+  statIconBox: {
+    width: 32, height: 32, borderRadius: 8,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  statValue: { fontSize: fontSize.md, fontWeight: '800', marginTop: 6, color: colors.text },
   statLabel: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
-  menu: { backgroundColor: '#fff', marginTop: 8 },
-  menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderBottomWidth: 1, borderColor: colors.border },
-  menuLabel: { flex: 1, fontSize: fontSize.md, color: colors.text },
-  chevron: { fontSize: 24, color: colors.textLight },
-  version: { textAlign: 'center', color: colors.textLight, fontSize: fontSize.xs, marginTop: 8 },
+  statDivider: { width: 1, backgroundColor: colors.border, marginVertical: 4 },
+  menu: { backgroundColor: '#fff', marginHorizontal: 12, marginTop: 16, borderRadius: radius.lg, overflow: 'hidden' },
+  menuRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 14, paddingHorizontal: 14,
+    borderBottomWidth: 1, borderColor: colors.border,
+  },
+  menuIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  menuLabel: { flex: 1, fontSize: fontSize.md, color: colors.text, fontWeight: '600' },
+  versionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 4 },
+  version: { textAlign: 'center', color: colors.textLight, fontSize: fontSize.xs },
 });

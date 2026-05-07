@@ -23,51 +23,154 @@ const CATEGORIES = [
 
 const PRODUCTS_BY_CATEGORY = {
   'Fruits & Vegetables': [
-    { name: 'fresho! Watermelon - Small', mrp: 99, price: 60, unit: '1 pc (approx 1.8 - 2.5 kg)', image: 'https://images.unsplash.com/photo-1571575173700-afb9492e6a50?w=600', isBestseller: true },
-    { name: 'fresho! Cucumber', mrp: 29, price: 15, unit: '500 g', image: 'https://images.unsplash.com/photo-1568584711271-6c929fb49b60?w=600' },
-    { name: 'fresho! Local Tomato', mrp: 56, price: 34, unit: '1 kg', image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600', isBestseller: true },
-    { name: 'fresho! Safeda Mango', mrp: 137, price: 89, unit: '1 kg', image: 'https://images.unsplash.com/photo-1605027990121-cbae9e0642db?w=600', isFeatured: true },
-    { name: 'fresho! Onion', mrp: 47, price: 27, unit: '1 kg', image: 'https://images.unsplash.com/photo-1620574387735-3624d75b2dbc?w=600' },
-    { name: 'fresho! Potato', mrp: 70, price: 35, unit: '1 kg', image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=600' },
-    { name: 'fresho! Tender Coconut', mrp: 118, price: 83.5, unit: '1 pc', image: 'https://images.unsplash.com/photo-1581375383680-903f6cef1d4f?w=600' },
-    { name: 'fresho! Banana - Robusta', mrp: 79, price: 56, unit: '1 kg', image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600' },
+    { name: 'fresho! Watermelon - Small', mrp: 99, price: 60, unit: '1 pc (approx 1.8 - 2.5 kg)', images: [
+      'https://images.unsplash.com/photo-1571575173700-afb9492e6a50?w=800',
+      'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800',
+      'https://images.unsplash.com/photo-1563114773-84221bd62daa?w=800',
+    ], isBestseller: true },
+    { name: 'fresho! Cucumber', mrp: 29, price: 15, unit: '500 g', images: [
+      'https://images.unsplash.com/photo-1568584711271-6c929fb49b60?w=800',
+      'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=800',
+    ] },
+    { name: 'fresho! Local Tomato', mrp: 56, price: 34, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800',
+      'https://images.unsplash.com/photo-1546470427-227df1e3c84e?w=800',
+      'https://images.unsplash.com/photo-1582284540020-8acbe03f4924?w=800',
+    ], isBestseller: true },
+    { name: 'fresho! Safeda Mango', mrp: 137, price: 89, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1605027990121-cbae9e0642db?w=800',
+      'https://images.unsplash.com/photo-1553279768-865429fa0078?w=800',
+      'https://images.unsplash.com/photo-1591073113125-e46713c829ed?w=800',
+    ], isFeatured: true },
+    { name: 'fresho! Onion', mrp: 47, price: 27, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1620574387735-3624d75b2dbc?w=800',
+      'https://images.unsplash.com/photo-1518977956812-cd3dbadaaf31?w=800',
+    ] },
+    { name: 'fresho! Potato', mrp: 70, price: 35, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=800',
+      'https://images.unsplash.com/photo-1591019479261-1a103585c559?w=800',
+    ] },
+    { name: 'fresho! Tender Coconut', mrp: 118, price: 83.5, unit: '1 pc', images: [
+      'https://images.unsplash.com/photo-1581375383680-903f6cef1d4f?w=800',
+      'https://images.unsplash.com/photo-1581374820941-c4d6f2939c2d?w=800',
+    ] },
+    { name: 'fresho! Banana - Robusta', mrp: 79, price: 56, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800',
+      'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=800',
+      'https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=800',
+    ] },
   ],
   'Dairy & Bakery': [
-    { name: 'Mother Dairy Classic Dahi', mrp: 12, price: 10, unit: '80 g cup', image: 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=600' },
-    { name: 'Amul Gold Milk', mrp: 70, price: 66, unit: '1 L pouch', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600', isBestseller: true },
-    { name: 'fresho! Farm Eggs - Regular', mrp: 350, price: 248, unit: '30 pcs', image: 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=600', isBestseller: true },
-    { name: 'Britannia White Bread', mrp: 50, price: 45, unit: '400 g', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600' },
-    { name: 'Amul Butter Salted', mrp: 60, price: 58, unit: '100 g', image: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=600' },
+    { name: 'Mother Dairy Classic Dahi', mrp: 12, price: 10, unit: '80 g cup', images: [
+      'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=800',
+      'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800',
+    ] },
+    { name: 'Amul Gold Milk', mrp: 70, price: 66, unit: '1 L pouch', images: [
+      'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800',
+      'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=800',
+      'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=800',
+    ], isBestseller: true },
+    { name: 'fresho! Farm Eggs - Regular', mrp: 350, price: 248, unit: '30 pcs', images: [
+      'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=800',
+      'https://images.unsplash.com/photo-1569288063648-5dfd34b8e0f5?w=800',
+      'https://images.unsplash.com/photo-1607690424560-35d967d6ad7d?w=800',
+    ], isBestseller: true },
+    { name: 'Britannia White Bread', mrp: 50, price: 45, unit: '400 g', images: [
+      'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800',
+      'https://images.unsplash.com/photo-1568471173242-461f0a730452?w=800',
+    ] },
+    { name: 'Amul Butter Salted', mrp: 60, price: 58, unit: '100 g', images: [
+      'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=800',
+      'https://images.unsplash.com/photo-1631374432898-1d0e10b95cf6?w=800',
+    ] },
   ],
   'Atta, Rice & Dals': [
-    { name: 'BB Royal Organic Sharbati Atta', mrp: 899, price: 506, unit: '10 kg', image: 'https://images.unsplash.com/photo-1568718247028-3d6f5a7d9f0f?w=600', isOrganic: true, isFeatured: true },
-    { name: 'India Gate Basmati Rice Classic', mrp: 1100, price: 879, unit: '5 kg', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600' },
-    { name: 'Tata Sampann Toor Dal', mrp: 220, price: 169, unit: '1 kg', image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=600' },
-    { name: 'Fortune Chana Dal', mrp: 160, price: 129, unit: '1 kg', image: 'https://images.unsplash.com/photo-1599909533733-4f0f5f3f7b3a?w=600' },
+    { name: 'BB Royal Organic Sharbati Atta', mrp: 899, price: 506, unit: '10 kg', images: [
+      'https://images.unsplash.com/photo-1568718247028-3d6f5a7d9f0f?w=800',
+      'https://images.unsplash.com/photo-1574323347407-f5e1c1f1e30f?w=800',
+    ], isOrganic: true, isFeatured: true },
+    { name: 'India Gate Basmati Rice Classic', mrp: 1100, price: 879, unit: '5 kg', images: [
+      'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800',
+      'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=800',
+      'https://images.unsplash.com/photo-1626016750062-db1577d8a01d?w=800',
+    ] },
+    { name: 'Tata Sampann Toor Dal', mrp: 220, price: 169, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800',
+      'https://images.unsplash.com/photo-1612257999691-c4e7c5cf4f38?w=800',
+    ] },
+    { name: 'Fortune Chana Dal', mrp: 160, price: 129, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1599909533733-4f0f5f3f7b3a?w=800',
+      'https://images.unsplash.com/photo-1517022812141-23620dba5c23?w=800',
+    ] },
   ],
   'Snacks & Drinks': [
-    { name: 'Lays Classic Salted', mrp: 20, price: 18, unit: '52 g', image: 'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=600' },
-    { name: 'Coca-Cola Bottle', mrp: 40, price: 38, unit: '750 ml', image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=600' },
-    { name: 'Kurkure Masala Munch', mrp: 20, price: 18, unit: '85 g', image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=600' },
-    { name: 'Real Mixed Fruit Juice', mrp: 110, price: 99, unit: '1 L', image: 'https://images.unsplash.com/photo-1600271886742-f049e6c9f0d4?w=600' },
+    { name: 'Lays Classic Salted', mrp: 20, price: 18, unit: '52 g', images: [
+      'https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=800',
+      'https://images.unsplash.com/photo-1613919113640-25732ec5e61f?w=800',
+    ] },
+    { name: 'Coca-Cola Bottle', mrp: 40, price: 38, unit: '750 ml', images: [
+      'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=800',
+      'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800',
+      'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=800',
+    ] },
+    { name: 'Kurkure Masala Munch', mrp: 20, price: 18, unit: '85 g', images: [
+      'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=800',
+      'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=800',
+    ] },
+    { name: 'Real Mixed Fruit Juice', mrp: 110, price: 99, unit: '1 L', images: [
+      'https://images.unsplash.com/photo-1600271886742-f049e6c9f0d4?w=800',
+      'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=800',
+    ] },
   ],
   'Eggs, Meat & Fish': [
-    { name: 'fresho! Chicken Curry Cut', mrp: 320, price: 269, unit: '500 g', image: 'https://images.unsplash.com/photo-1604908554007-0a04ee2a6f87?w=600', isVeg: false },
-    { name: 'fresho! Rohu Fish', mrp: 380, price: 299, unit: '500 g', image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600', isVeg: false },
+    { name: 'fresho! Chicken Curry Cut', mrp: 320, price: 269, unit: '500 g', images: [
+      'https://images.unsplash.com/photo-1604908554007-0a04ee2a6f87?w=800',
+      'https://images.unsplash.com/photo-1587593810167-a84920ea0781?w=800',
+    ], isVeg: false },
+    { name: 'fresho! Rohu Fish', mrp: 380, price: 299, unit: '500 g', images: [
+      'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800',
+      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800',
+    ], isVeg: false },
   ],
   'Cleaning & Household': [
-    { name: 'Harpic Power Plus 10x', mrp: 120, price: 95, unit: '500 ml', image: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600' },
-    { name: 'Vim Dishwash Liquid Gel', mrp: 199, price: 165, unit: '750 ml', image: 'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?w=600' },
-    { name: 'Ariel Detergent Powder', mrp: 250, price: 199, unit: '1 kg', image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600' },
+    { name: 'Harpic Power Plus 10x', mrp: 120, price: 95, unit: '500 ml', images: [
+      'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800',
+      'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=800',
+    ] },
+    { name: 'Vim Dishwash Liquid Gel', mrp: 199, price: 165, unit: '750 ml', images: [
+      'https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?w=800',
+      'https://images.unsplash.com/photo-1583952018486-9b7c2e0e3f2e?w=800',
+    ] },
+    { name: 'Ariel Detergent Powder', mrp: 250, price: 199, unit: '1 kg', images: [
+      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800',
+      'https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=800',
+    ] },
   ],
   'Personal Care': [
-    { name: 'Colgate MaxFresh Toothpaste', mrp: 110, price: 99, unit: '150 g', image: 'https://images.unsplash.com/photo-1559591935-c6c92c6b2fe7?w=600' },
-    { name: 'Dove Beauty Bar', mrp: 80, price: 65, unit: '100 g', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600' },
-    { name: 'Head & Shoulders Shampoo', mrp: 199, price: 169, unit: '180 ml', image: 'https://images.unsplash.com/photo-1631730486572-226d1f595b68?w=600' },
+    { name: 'Colgate MaxFresh Toothpaste', mrp: 110, price: 99, unit: '150 g', images: [
+      'https://images.unsplash.com/photo-1559591935-c6c92c6b2fe7?w=800',
+      'https://images.unsplash.com/photo-1612538498488-fe1d2ac9d6d4?w=800',
+    ] },
+    { name: 'Dove Beauty Bar', mrp: 80, price: 65, unit: '100 g', images: [
+      'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800',
+      'https://images.unsplash.com/photo-1576426863848-c21f53c60b19?w=800',
+    ] },
+    { name: 'Head & Shoulders Shampoo', mrp: 199, price: 169, unit: '180 ml', images: [
+      'https://images.unsplash.com/photo-1631730486572-226d1f595b68?w=800',
+      'https://images.unsplash.com/photo-1626015449611-5f3c0d5ddc49?w=800',
+      'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800',
+    ] },
   ],
   'Sweets & Chocolates': [
-    { name: 'Cadbury Dairy Milk Silk', mrp: 180, price: 150, unit: '150 g', image: 'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=600' },
-    { name: 'Haldirams Soan Papdi', mrp: 220, price: 175, unit: '500 g', image: 'https://images.unsplash.com/photo-1606312618919-3a5b3ddd03f2?w=600' },
+    { name: 'Cadbury Dairy Milk Silk', mrp: 180, price: 150, unit: '150 g', images: [
+      'https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=800',
+      'https://images.unsplash.com/photo-1623660053975-cf75a8be0908?w=800',
+      'https://images.unsplash.com/photo-1606312618919-3a5b3ddd03f2?w=800',
+    ] },
+    { name: 'Haldirams Soan Papdi', mrp: 220, price: 175, unit: '500 g', images: [
+      'https://images.unsplash.com/photo-1606312618919-3a5b3ddd03f2?w=800',
+      'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=800',
+    ] },
   ],
 };
 
@@ -115,12 +218,13 @@ async function run() {
     const cat = catBySlug[catName];
     for (const p of list) {
       const slug = slugify(p.name);
+      const images = Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : []);
       await Product.create({
         name: p.name,
         slug,
         brand: p.name.split(' ')[0],
-        description: `${p.name} — fresh, high-quality and delivered in 10 minutes.`,
-        images: [p.image],
+        description: `${p.name} — fresh, high-quality and delivered in 10 minutes. Sourced directly from trusted suppliers, hand-picked to ensure premium quality and packed with care.`,
+        images,
         category: cat._id,
         unit: p.unit,
         price: p.price,

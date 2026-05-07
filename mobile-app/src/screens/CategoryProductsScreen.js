@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+
 import api from '../api/client';
 import ProductCard from '../components/ProductCard';
 import CartFooter from '../components/CartFooter';
@@ -21,10 +23,16 @@ export default function CategoryProductsScreen() {
   }, [category, nav]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <View style={{ flex: 1, backgroundColor: colors.surface }}>
       <View style={styles.headerInfo}>
         <Text style={styles.headerTitle}>{category.name}</Text>
-        <Text style={styles.headerSub}>{products.length} products · 10 min delivery</Text>
+        <View style={styles.metaRow}>
+          <MaterialCommunityIcons name="package-variant" size={14} color={colors.textMuted} />
+          <Text style={styles.headerSub}>{products.length} products</Text>
+          <Text style={styles.dot}>·</Text>
+          <Ionicons name="time-outline" size={14} color={colors.success} />
+          <Text style={[styles.headerSub, { color: colors.success, fontWeight: '700' }]}>10 min delivery</Text>
+        </View>
       </View>
 
       {loading ? (
@@ -42,7 +50,12 @@ export default function CategoryProductsScreen() {
               <ProductCard product={item} onPress={() => nav.navigate('ProductDetail', { id: item._id })} />
             </View>
           )}
-          ListEmptyComponent={<Text style={styles.empty}>No products in this category yet.</Text>}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="basket-outline" size={48} color={colors.textLight} />
+              <Text style={styles.emptyText}>No products in this category yet</Text>
+            </View>
+          }
         />
       )}
       <CartFooter />
@@ -53,6 +66,9 @@ export default function CategoryProductsScreen() {
 const styles = StyleSheet.create({
   headerInfo: { padding: 16, borderBottomWidth: 1, borderColor: colors.border, backgroundColor: '#fff' },
   headerTitle: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text },
-  headerSub: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
-  empty: { textAlign: 'center', color: colors.textMuted, padding: 40 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  headerSub: { fontSize: fontSize.xs, color: colors.textMuted, fontWeight: '600' },
+  dot: { color: colors.textLight, marginHorizontal: 2 },
+  empty: { alignItems: 'center', padding: 60 },
+  emptyText: { color: colors.textMuted, marginTop: 12, fontSize: fontSize.md, fontWeight: '600' },
 });

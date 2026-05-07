@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+
 import api from '../api/client';
 import { useAuth } from '../store/auth';
 import Button from '../components/Button';
-import { colors, fontSize, radius, spacing } from '../theme';
+import { colors, fontSize, radius, spacing, shadow } from '../theme';
 
 export default function LoginScreen() {
   const setAuth = useAuth((s) => s.setAuth);
@@ -42,9 +44,9 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <LinearGradient colors={[colors.primarySoft, '#fff']} style={styles.hero}>
-        <View style={styles.logoBox}>
-          <Text style={styles.logoEmoji}>🛒</Text>
+      <LinearGradient colors={['#bbf7d0', '#fff']} style={styles.hero}>
+        <View style={[styles.logoBox, shadow.glow]}>
+          <MaterialCommunityIcons name="basket" size={40} color="#fff" />
         </View>
         <Text style={styles.title}>Dailyzo</Text>
         <Text style={styles.tagline}>Groceries delivered in 10 minutes</Text>
@@ -53,35 +55,66 @@ export default function LoginScreen() {
       <View style={styles.form}>
         {step === 'phone' ? (
           <>
-            <Text style={styles.label}>Enter your mobile number</Text>
+            <Text style={styles.heading}>Welcome 👋</Text>
+            <Text style={styles.subheading}>Enter your phone to continue</Text>
+
+            <Text style={styles.label}>Mobile number</Text>
             <View style={styles.phoneRow}>
-              <Text style={styles.code}>+91</Text>
+              <View style={styles.code}>
+                <Text style={styles.codeText}>+91</Text>
+              </View>
+              <View style={[styles.inputWrap, { flex: 1 }]}>
+                <Ionicons name="call-outline" size={18} color={colors.textLight} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="98XXXXXXXX"
+                  placeholderTextColor={colors.textLight}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.label}>Your name (optional)</Text>
+            <View style={styles.inputWrap}>
+              <Ionicons name="person-outline" size={18} color={colors.textLight} />
               <TextInput
                 style={styles.input}
-                placeholder="98XXXXXXXX"
-                keyboardType="phone-pad"
-                maxLength={10}
-                value={phone}
-                onChangeText={setPhone}
+                placeholder="Aman Kumar"
+                placeholderTextColor={colors.textLight}
+                value={name}
+                onChangeText={setName}
               />
             </View>
-            <Text style={styles.label}>Your name (optional)</Text>
-            <TextInput style={styles.input} placeholder="Aman Kumar" value={name} onChangeText={setName} />
-            <Button title="Send OTP" onPress={sendOtp} loading={loading} style={{ marginTop: 16 }} />
-            <Text style={styles.hint}>By continuing, you agree to our terms</Text>
+
+            <Button title="Send OTP" onPress={sendOtp} loading={loading} style={{ marginTop: 20 }} />
+            <View style={styles.hintRow}>
+              <Ionicons name="shield-checkmark" size={14} color={colors.textMuted} />
+              <Text style={styles.hint}>By continuing, you agree to our terms</Text>
+            </View>
           </>
         ) : (
           <>
-            <Text style={styles.label}>Enter the 6-digit OTP sent to</Text>
-            <Text style={styles.phoneLine}>+91 {phone}</Text>
-            <TextInput
-              style={[styles.input, styles.otpInput]}
-              placeholder="123456"
-              keyboardType="number-pad"
-              maxLength={6}
-              value={otp}
-              onChangeText={setOtp}
-            />
+            <Text style={styles.heading}>Verify OTP</Text>
+            <Text style={styles.subheading}>
+              Enter the 6-digit code sent to <Text style={{ fontWeight: '800', color: colors.text }}>+91 {phone}</Text>
+            </Text>
+
+            <View style={styles.inputWrap}>
+              <Ionicons name="key-outline" size={18} color={colors.textLight} />
+              <TextInput
+                style={[styles.input, styles.otpInput]}
+                placeholder="• • • • • •"
+                placeholderTextColor={colors.textLight}
+                keyboardType="number-pad"
+                maxLength={6}
+                value={otp}
+                onChangeText={setOtp}
+              />
+            </View>
+
             <Button title="Verify & Continue" onPress={verify} loading={loading} style={{ marginTop: 16 }} />
             <Button title="← Change number" variant="ghost" onPress={() => setStep('phone')} style={{ marginTop: 8 }} />
           </>
@@ -94,27 +127,28 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   hero: { paddingTop: 80, paddingBottom: 40, alignItems: 'center' },
   logoBox: {
-    width: 80, height: 80, borderRadius: 24, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    width: 88, height: 88, borderRadius: 26, backgroundColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
   },
-  logoEmoji: { fontSize: 40 },
-  title: { fontSize: 32, fontWeight: '800', color: colors.text },
+  title: { fontSize: 34, fontWeight: '800', color: colors.text, letterSpacing: -0.5 },
   tagline: { fontSize: fontSize.md, color: colors.textMuted, marginTop: 4 },
-  form: { padding: spacing(6) },
-  label: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: 6, marginTop: 12 },
+  form: { padding: spacing(6), flex: 1, backgroundColor: '#fff' },
+  heading: { fontSize: fontSize.xxl, fontWeight: '800', color: colors.text },
+  subheading: { fontSize: fontSize.md, color: colors.textMuted, marginTop: 4, marginBottom: 8 },
+  label: { fontSize: fontSize.xs, color: colors.textMuted, marginBottom: 6, marginTop: 16, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   phoneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   code: {
-    fontSize: fontSize.lg, fontWeight: '600', color: colors.text,
-    paddingHorizontal: 12, paddingVertical: 14, backgroundColor: colors.surfaceAlt, borderRadius: radius.md,
+    paddingHorizontal: 14, paddingVertical: 14,
+    backgroundColor: colors.surfaceAlt, borderRadius: radius.md,
   },
-  input: {
-    flex: 1,
+  codeText: { fontSize: fontSize.lg, fontWeight: '800', color: colors.text },
+  inputWrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
     borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: 14, paddingVertical: 12,
-    borderRadius: radius.md, fontSize: fontSize.lg,
-    backgroundColor: '#fff',
+    paddingHorizontal: 14, borderRadius: radius.md, backgroundColor: '#fff',
   },
-  otpInput: { letterSpacing: 8, textAlign: 'center', fontWeight: '700', fontSize: 24 },
-  phoneLine: { fontSize: fontSize.lg, fontWeight: '600', color: colors.text, marginBottom: 12 },
-  hint: { fontSize: fontSize.xs, color: colors.textLight, textAlign: 'center', marginTop: 16 },
+  input: { flex: 1, paddingVertical: 14, fontSize: fontSize.lg, color: colors.text },
+  otpInput: { letterSpacing: 8, textAlign: 'center', fontWeight: '800', fontSize: 22 },
+  hintRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 18 },
+  hint: { fontSize: fontSize.xs, color: colors.textMuted },
 });
