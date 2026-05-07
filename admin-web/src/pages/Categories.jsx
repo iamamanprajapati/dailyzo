@@ -16,7 +16,7 @@ export default function Categories() {
 
   const load = () => {
     setLoading(true);
-    api.get('/categories')
+    api.get('/categories', { params: { all: true } })
       .then(({ data }) => setList(data.categories))
       .finally(() => setLoading(false));
   };

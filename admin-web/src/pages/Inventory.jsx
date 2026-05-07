@@ -15,7 +15,7 @@ export default function Inventory() {
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/products', { params: { q, limit: 200 } });
+      const { data } = await api.get('/products', { params: { q, limit: 200, all: true } });
       setProducts(data.products);
     } finally {
       setLoading(false);

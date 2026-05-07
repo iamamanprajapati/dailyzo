@@ -17,7 +17,7 @@ export default function Products() {
   const load = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/products', { params: { q, limit: 100 } });
+      const { data } = await api.get('/products', { params: { q, limit: 100, all: true } });
       setProducts(data.products);
     } catch (err) {
       toast.error('Failed to load products');

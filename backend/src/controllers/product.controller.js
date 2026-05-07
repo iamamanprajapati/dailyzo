@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 const slugify = require('../utils/slugify');
 
 const list = asyncHandler(async (req, res) => {
@@ -16,11 +17,17 @@ const list = asyncHandler(async (req, res) => {
     page = 1,
     limit = 24,
     sort = '-createdAt',
+    all,
+    inStock,
   } = req.query;
 
-  const filter = { isActive: true };
+  // Default = storefront view (only active products + only products in active categories).
+  // Admin dashboards pass ?all=true to see disabled products and products in inactive categories.
+  const isAdminView = all === 'true';
+
+  const filter = {};
+  if (!isAdminView) filter.isActive = true;
   if (q) filter.$text = { $search: q };
-  if (category) filter.category = category;
   if (subcategory) filter.subcategory = subcategory;
   if (minPrice || maxPrice) {
     filter.price = {};
@@ -31,10 +38,19 @@ const list = asyncHandler(async (req, res) => {
   if (isOrganic !== undefined) filter.isOrganic = isOrganic === 'true';
   if (isBestseller !== undefined) filter.isBestseller = isBestseller === 'true';
   if (isFeatured !== undefined) filter.isFeatured = isFeatured === 'true';
+  if (inStock === 'true') filter.stock = { $gt: 0 };
+
+  if (category) {
+    filter.category = category;
+  } else if (!isAdminView) {
+    // Hide products belonging to inactive categories from the storefront.
+    const activeCategoryIds = await Category.find({ isActive: true }).distinct('_id');
+    filter.category = { $in: activeCategoryIds };
+  }
 
   const skip = (Number(page) - 1) * Number(limit);
   const [items, total] = await Promise.all([
-    Product.find(filter).populate('category', 'name slug').sort(sort).skip(skip).limit(Number(limit)),
+    Product.find(filter).populate('category', 'name slug isActive').sort(sort).skip(skip).limit(Number(limit)),
     Product.countDocuments(filter),
   ]);
 

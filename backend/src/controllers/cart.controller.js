@@ -30,8 +30,19 @@ const addItem = asyncHandler(async (req, res) => {
 
   const cart = await getOrCreateCart(req.user._id);
   const existing = cart.items.find((i) => i.product._id.toString() === productId);
+  const desiredQty = (existing ? existing.quantity : 0) + Number(quantity);
+
+  if (product.stock <= 0) {
+    res.status(400);
+    throw new Error('This item is sold out');
+  }
+  if (desiredQty > product.stock) {
+    res.status(400);
+    throw new Error(`Only ${product.stock} left in stock`);
+  }
+
   if (existing) {
-    existing.quantity += Number(quantity);
+    existing.quantity = desiredQty;
   } else {
     cart.items.push({
       product: product._id,
@@ -56,6 +67,19 @@ const updateItem = asyncHandler(async (req, res) => {
   if (quantity <= 0) {
     cart.items = cart.items.filter((i) => i.product._id.toString() !== productId);
   } else {
+    const product = await Product.findById(productId);
+    if (!product || !product.isActive) {
+      res.status(404);
+      throw new Error('Product not available');
+    }
+    if (product.stock <= 0) {
+      res.status(400);
+      throw new Error('This item is sold out');
+    }
+    if (Number(quantity) > product.stock) {
+      res.status(400);
+      throw new Error(`Only ${product.stock} left in stock`);
+    }
     item.quantity = Number(quantity);
   }
   await cart.save();

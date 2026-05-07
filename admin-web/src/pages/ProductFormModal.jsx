@@ -15,7 +15,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api.get('/categories').then(({ data }) => setCategories(data.categories));
+    api.get('/categories', { params: { all: true } }).then(({ data }) => setCategories(data.categories));
   }, []);
 
   useEffect(() => {

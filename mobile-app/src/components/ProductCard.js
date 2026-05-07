@@ -31,13 +31,15 @@ export default function ProductCard({ product, onPress }) {
 
   const discount = product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   const imageCount = product.images?.length || 0;
+  const soldOut = (product.stock ?? 0) <= 0;
+  const lowStock = !soldOut && product.stock <= 5;
 
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.card, shadow.card, pressed && { transform: [{ scale: 0.98 }] }]}
     >
-      {discount > 0 && (
+      {discount > 0 && !soldOut && (
         <View style={styles.discountTag}>
           <Text style={styles.discountText}>{discount}% OFF</Text>
         </View>
@@ -52,10 +54,22 @@ export default function ProductCard({ product, onPress }) {
 
       <View style={styles.imageWrap}>
         {product.images?.[0] ? (
-          <Image source={{ uri: product.images[0] }} style={styles.image} resizeMode="contain" />
+          <Image
+            source={{ uri: product.images[0] }}
+            style={[styles.image, soldOut && styles.imageDimmed]}
+            resizeMode="contain"
+          />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]}>
             <MaterialCommunityIcons name="image-off-outline" size={28} color={colors.textLight} />
+          </View>
+        )}
+        {soldOut && (
+          <View style={styles.soldOutOverlay}>
+            <View style={styles.soldOutBadge}>
+              <Ionicons name="alert-circle" size={12} color="#fff" />
+              <Text style={styles.soldOutText}>SOLD OUT</Text>
+            </View>
           </View>
         )}
       </View>
@@ -69,15 +83,26 @@ export default function ProductCard({ product, onPress }) {
         <Text numberOfLines={2} style={styles.name}>{product.name}</Text>
         <Text style={styles.unit}>{product.unit}</Text>
 
+        {lowStock && (
+          <View style={styles.lowStockChip}>
+            <Ionicons name="time-outline" size={10} color={colors.warning} />
+            <Text style={styles.lowStockText}>Only {product.stock} left</Text>
+          </View>
+        )}
+
         <View style={styles.bottomRow}>
           <View style={{ flex: 1 }}>
             <View style={styles.priceRow}>
-              <Text style={styles.price}>{inr(product.price)}</Text>
+              <Text style={[styles.price, soldOut && { color: colors.textLight }]}>{inr(product.price)}</Text>
               {discount > 0 && <Text style={styles.mrp}>{inr(product.mrp)}</Text>}
             </View>
           </View>
 
-          {qty === 0 ? (
+          {soldOut ? (
+            <View style={styles.notifyBtn}>
+              <Text style={styles.notifyText}>Sold out</Text>
+            </View>
+          ) : qty === 0 ? (
             <Pressable onPress={handleAdd} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.85 }]}>
               <Text style={styles.addText}>ADD</Text>
             </Pressable>
@@ -87,7 +112,12 @@ export default function ProductCard({ product, onPress }) {
                 <Ionicons name="remove" size={16} color="#fff" />
               </Pressable>
               <Text style={styles.qtyValue}>{qty}</Text>
-              <Pressable onPress={handleInc} style={styles.qtyBtn} hitSlop={6}>
+              <Pressable
+                onPress={handleInc}
+                style={[styles.qtyBtn, qty >= product.stock && { opacity: 0.4 }]}
+                hitSlop={6}
+                disabled={qty >= product.stock}
+              >
                 <Ionicons name="add" size={16} color="#fff" />
               </Pressable>
             </View>
@@ -132,9 +162,26 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   imageCountText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  imageWrap: { aspectRatio: 1, backgroundColor: colors.surface, padding: 8 },
+  imageWrap: { aspectRatio: 1, backgroundColor: colors.surface, padding: 8, position: 'relative' },
   image: { width: '100%', height: '100%' },
+  imageDimmed: { opacity: 0.35 },
   imagePlaceholder: { backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
+  soldOutOverlay: {
+    position: 'absolute',
+    inset: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  soldOutBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  soldOutText: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   body: { padding: 10 },
   etaRow: {
     flexDirection: 'row',
@@ -165,6 +212,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addText: { color: colors.primaryDark, fontWeight: '800', fontSize: fontSize.sm, letterSpacing: 0.5 },
+  notifyBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minWidth: 64,
+    alignItems: 'center',
+  },
+  notifyText: { color: colors.textMuted, fontWeight: '800', fontSize: fontSize.sm, letterSpacing: 0.5 },
+  lowStockChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    alignSelf: 'flex-start',
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    marginBottom: 6,
+  },
+  lowStockText: { color: '#92400e', fontSize: 10, fontWeight: '700' },
   qtyBox: {
     flexDirection: 'row',
     alignItems: 'center',

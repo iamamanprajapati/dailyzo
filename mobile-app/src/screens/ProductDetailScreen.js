@@ -31,14 +31,21 @@ export default function ProductDetailScreen() {
   }
 
   const discount = product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
+  const soldOut = (product.stock ?? 0) <= 0;
+  const lowStock = !soldOut && product.stock <= 5;
 
   const handleAdd = async () => {
     if (!user) return Alert.alert('Sign in', 'Please log in first.');
-    await add(product._id, 1);
+    try {
+      await add(product._id, 1);
+    } catch (err) {
+      Alert.alert('Cannot add', err.response?.data?.message || 'Try again');
+    }
   };
 
   const badges = [];
-  if (discount > 0) badges.push({ label: `${discount}% OFF`, color: colors.danger, icon: 'pricetag' });
+  if (soldOut) badges.push({ label: 'SOLD OUT', color: '#0f172a', icon: 'alert-circle' });
+  else if (discount > 0) badges.push({ label: `${discount}% OFF`, color: colors.danger, icon: 'pricetag' });
   if (product.isBestseller) badges.push({ label: 'BESTSELLER', color: '#f59e0b', icon: 'trophy' });
   if (product.isOrganic) badges.push({ label: 'ORGANIC', color: '#059669', icon: 'leaf' });
 
@@ -65,15 +72,33 @@ export default function ProductDetailScreen() {
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{inr(product.price)}</Text>
+            <Text style={[styles.price, soldOut && { color: colors.textLight }]}>{inr(product.price)}</Text>
             {discount > 0 && <Text style={styles.mrp}>{inr(product.mrp)}</Text>}
-            {discount > 0 && (
+            {discount > 0 && !soldOut && (
               <View style={styles.savePill}>
                 <Ionicons name="trending-down" size={11} color={colors.success} />
                 <Text style={styles.savePillText}>Save {inr(product.mrp - product.price)}</Text>
               </View>
             )}
           </View>
+
+          {soldOut ? (
+            <View style={styles.stockBanner}>
+              <Ionicons name="alert-circle" size={16} color={colors.danger} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.stockBannerTitle}>Currently sold out</Text>
+                <Text style={styles.stockBannerSub}>We'll restock this soon. Check back later.</Text>
+              </View>
+            </View>
+          ) : lowStock ? (
+            <View style={[styles.stockBanner, { backgroundColor: '#fef3c7' }]}>
+              <Ionicons name="time" size={16} color="#b45309" />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.stockBannerTitle, { color: '#92400e' }]}>Hurry — only {product.stock} left</Text>
+                <Text style={[styles.stockBannerSub, { color: '#b45309' }]}>Going fast at this price</Text>
+              </View>
+            </View>
+          ) : null}
 
           {(product.rating > 0 || product.reviewCount > 0) && (
             <View style={styles.ratingRow}>
@@ -115,7 +140,9 @@ export default function ProductDetailScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        {qty === 0 ? (
+        {soldOut ? (
+          <Button title="Out of Stock" disabled />
+        ) : qty === 0 ? (
           <Button title={`Add to Cart  ·  ${inr(product.price)}`} onPress={handleAdd} />
         ) : (
           <View style={styles.cartRow}>
@@ -124,7 +151,11 @@ export default function ProductDetailScreen() {
                 <Ionicons name="remove" size={18} color={colors.text} />
               </Pressable>
               <Text style={styles.qtyValue}>{qty}</Text>
-              <Pressable onPress={() => setQty(product._id, qty + 1)} style={styles.qtyBtn}>
+              <Pressable
+                onPress={() => setQty(product._id, qty + 1)}
+                style={[styles.qtyBtn, qty >= product.stock && { opacity: 0.4 }]}
+                disabled={qty >= product.stock}
+              >
                 <Ionicons name="add" size={18} color={colors.text} />
               </Pressable>
             </View>
@@ -185,6 +216,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999,
   },
   savePillText: { fontSize: fontSize.xs, color: colors.primaryDark, fontWeight: '800' },
+  stockBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    marginTop: 14,
+  },
+  stockBannerTitle: { fontSize: fontSize.sm, color: colors.danger, fontWeight: '800' },
+  stockBannerSub: { fontSize: fontSize.xs, color: '#dc2626', marginTop: 2, fontWeight: '600' },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   ratingPill: {
     flexDirection: 'row', alignItems: 'center', gap: 3,
