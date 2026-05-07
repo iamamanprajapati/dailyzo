@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import api from '../api/client';
 import { useAuth } from '../store/auth';
 import Button from '../components/Button';
 import { colors, fontSize, radius, shadow } from '../theme';
@@ -10,17 +12,39 @@ import { colors, fontSize, radius, shadow } from '../theme';
 const ITEMS = [
   { icon: 'receipt-outline', label: 'My Orders', screen: 'Orders', color: '#3b82f6' },
   { icon: 'location-outline', label: 'Saved Addresses', screen: 'AddAddress', color: '#10b981' },
-  { icon: 'pricetag-outline', label: 'Coupons & Offers', color: '#f59e0b' },
-  { icon: 'wallet-outline', label: 'Dailyzo Wallet', color: '#8b5cf6' },
-  { icon: 'star-outline', label: 'Ratings & Reviews', color: '#f97316' },
-  { icon: 'gift-outline', label: 'Refer & Earn', color: '#ec4899' },
-  { icon: 'chatbubble-ellipses-outline', label: 'Help & Support', color: '#06b6d4' },
-  { icon: 'information-circle-outline', label: 'About Dailyzo', color: '#64748b' },
+  { icon: 'pricetag-outline', label: 'Coupons & Offers', screen: 'CouponsOffers', color: '#f59e0b' },
+  { icon: 'wallet-outline', label: 'Dailyzo Wallet', screen: 'Wallet', color: '#8b5cf6' },
+  { icon: 'star-outline', label: 'Ratings & Reviews', screen: 'RatingsReviews', color: '#f97316' },
+  { icon: 'gift-outline', label: 'Refer & Earn', screen: 'ReferEarn', color: '#ec4899' },
+  { icon: 'chatbubble-ellipses-outline', label: 'Help & Support', screen: 'HelpSupport', color: '#06b6d4' },
+  { icon: 'information-circle-outline', label: 'About Dailyzo', screen: 'About', color: '#64748b' },
 ];
 
 export default function AccountScreen() {
   const nav = useNavigation();
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refreshProfile = useCallback(async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      setUser(data.user);
+    } catch {
+      /* ignore */
+    }
+  }, [setUser]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshProfile();
+    }, [refreshProfile]),
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshProfile();
+    setRefreshing(false);
+  };
 
   if (!user) {
     return (
@@ -34,7 +58,13 @@ export default function AccountScreen() {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.surface }} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.surface }}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+      }
+    >
       <LinearGradient colors={['#dcfce7', '#fff']} style={styles.header}>
         <View style={[styles.avatar, shadow.card]}>
           <Text style={{ fontSize: 30, color: colors.primaryDark, fontWeight: '800' }}>{user.name?.[0]}</Text>
@@ -47,9 +77,9 @@ export default function AccountScreen() {
       </LinearGradient>
 
       <View style={[styles.statsRow, shadow.card]}>
-        <Stat icon="cube-outline" label="Orders" value="View" onPress={() => nav.navigate('Orders')} />
+        <Stat icon="cube-outline" label="Orders" value="View" onPress={() => nav.navigate('Tabs', { screen: 'Orders' })} />
         <View style={styles.statDivider} />
-        <Stat icon="wallet-outline" label="Wallet" value={`₹${user.walletBalance || 0}`} />
+        <Stat icon="wallet-outline" label="Wallet" value={`₹${user.walletBalance ?? 0}`} onPress={() => nav.navigate('Wallet')} />
         <View style={styles.statDivider} />
         <Stat icon="location-outline" label="Addresses" value={user.addresses?.length || 0} onPress={() => nav.navigate('AddAddress')} />
       </View>
@@ -65,7 +95,11 @@ export default function AccountScreen() {
                 isLast && { borderBottomWidth: 0 },
                 pressed && { backgroundColor: colors.surface },
               ]}
-              onPress={() => item.screen && nav.navigate(item.screen)}
+              onPress={() => {
+                if (!item.screen) return;
+                if (item.screen === 'Orders') nav.navigate('Tabs', { screen: 'Orders' });
+                else nav.navigate(item.screen);
+              }}
             >
               <View style={[styles.menuIconBox, { backgroundColor: item.color + '18' }]}>
                 <Ionicons name={item.icon} size={18} color={item.color} />

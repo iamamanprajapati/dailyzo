@@ -18,6 +18,10 @@ const createPaymentOrder = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error('Forbidden');
   }
+  if (['cancelled', 'delivered'].includes(order.status)) {
+    res.status(400);
+    throw new Error('Cannot pay for this order');
+  }
 
   const rzpOrder = await razorpayService.createOrder({
     amount: order.total,
@@ -46,6 +50,10 @@ const verifyPayment = asyncHandler(async (req, res) => {
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
+  }
+  if (['cancelled', 'delivered'].includes(order.status)) {
+    res.status(400);
+    throw new Error('This order cannot be paid anymore');
   }
 
   let valid = true;
@@ -86,8 +94,23 @@ const verifyPayment = asyncHandler(async (req, res) => {
 });
 
 const listTransactions = asyncHandler(async (req, res) => {
-  const filter = req.user.role === 'admin' ? {} : { user: req.user._id };
-  const txns = await Transaction.find(filter).sort('-createdAt').limit(200).populate('user', 'name email');
+  const isAdmin = req.user.role === 'admin';
+  const walletOnly = req.query.wallet === 'true' || req.query.wallet === '1';
+
+  let filter;
+  if (walletOnly) {
+    filter = {
+      type: { $in: ['wallet_debit', 'wallet_credit'] },
+      ...(isAdmin ? {} : { user: req.user._id }),
+    };
+  } else {
+    filter = isAdmin ? {} : { user: req.user._id };
+  }
+
+  const limit = walletOnly ? 80 : 200;
+  let q = Transaction.find(filter).sort('-createdAt').limit(limit).populate('order', 'orderNumber status total paymentMethod');
+  if (isAdmin) q = q.populate('user', 'name email');
+  const txns = await q;
   res.json({ success: true, count: txns.length, transactions: txns });
 });
 

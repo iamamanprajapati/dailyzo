@@ -3,6 +3,7 @@ const c = require('../controllers/coupon.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
 router.post('/validate', protect, c.validate);
+router.get('/available', protect, c.listAvailable);
 router.get('/', protect, authorize('admin'), c.list);
 router.post('/', protect, authorize('admin'), c.create);
 router.put('/:id', protect, authorize('admin'), c.update);

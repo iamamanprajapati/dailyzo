@@ -39,11 +39,20 @@ export default function CheckoutScreen() {
   const [placing, setPlacing] = useState(false);
 
   useEffect(() => {
-    api.get('/addresses').then(({ data }) => {
-      setAddresses(data.addresses);
-      if (!selectedAddrId) setSelectedAddrId(data.addresses.find((a) => a.isDefault)?._id || data.addresses[0]?._id);
-      setUser({ ...user, addresses: data.addresses });
-    });
+    (async () => {
+      try {
+        const [{ data: addrData }, { data: meData }] = await Promise.all([
+          api.get('/addresses'),
+          api.get('/auth/me'),
+        ]);
+        setAddresses(addrData.addresses || []);
+        setUser(meData.user);
+        const list = addrData.addresses || [];
+        setSelectedAddrId((prev) => prev || list.find((a) => a.isDefault)?._id || list[0]?._id);
+      } catch {
+        /* ignore */
+      }
+    })();
   }, []);
 
   const subtotal = cart.subtotal;
@@ -52,6 +61,9 @@ export default function CheckoutScreen() {
   const deliveryFee = subtotal >= 199 ? 0 : 25;
   const taxes = Math.round(subtotal * 0.05);
   const total = Math.max(0, subtotal - couponDiscount + deliveryFee + taxes);
+
+  const walletBalance = user?.walletBalance ?? 0;
+  const walletInsufficient = paymentMethod === 'wallet' && walletBalance < total;
 
   const applyCoupon = async () => {
     if (!coupon.trim()) return;
@@ -69,6 +81,12 @@ export default function CheckoutScreen() {
 
   const placeOrder = async () => {
     if (!selectedAddrId) return Alert.alert('Address required', 'Please select a delivery address.');
+    if (walletInsufficient) {
+      return Alert.alert(
+        'Insufficient balance',
+        `Your wallet has ${inr(walletBalance)} but this order is ${inr(total)}. Add money or choose another payment method.`,
+      );
+    }
     setPlacing(true);
     try {
       const { data } = await api.post('/orders/checkout', {
@@ -77,7 +95,8 @@ export default function CheckoutScreen() {
         couponCode: appliedCoupon?.code,
       });
 
-      if (paymentMethod !== 'cod') {
+      const useGateway = paymentMethod !== 'cod' && paymentMethod !== 'wallet';
+      if (useGateway) {
         await api.post('/payments/order', { orderId: data.order._id });
         await api.post('/payments/verify', {
           orderId: data.order._id,
@@ -87,6 +106,12 @@ export default function CheckoutScreen() {
       }
 
       await loadCart();
+      try {
+        const { data: meData } = await api.get('/auth/me');
+        setUser(meData.user);
+      } catch {
+        /* ignore */
+      }
       nav.replace('OrderTracking', { orderId: data.order._id });
     } catch (err) {
       Alert.alert('Order failed', err.response?.data?.message || 'Something went wrong');
@@ -175,6 +200,10 @@ export default function CheckoutScreen() {
           </View>
           {PAYMENT_METHODS.map((m) => {
             const selected = paymentMethod === m.id;
+            const sub =
+              m.id === 'wallet'
+                ? `Balance ${inr(walletBalance)}`
+                : m.sub;
             return (
               <Pressable
                 key={m.id}
@@ -186,7 +215,7 @@ export default function CheckoutScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.payLabel}>{m.label}</Text>
-                  <Text style={styles.paySub}>{m.sub}</Text>
+                  <Text style={styles.paySub}>{sub}</Text>
                 </View>
                 <View style={styles.radio}>
                   {selected && <View style={styles.radioDot} />}
@@ -194,6 +223,14 @@ export default function CheckoutScreen() {
               </Pressable>
             );
           })}
+          {walletInsufficient && (
+            <View style={styles.walletWarn}>
+              <Ionicons name="alert-circle" size={18} color={colors.danger} />
+              <Text style={styles.walletWarnText}>
+                Add at least {inr(total - walletBalance)} to your wallet or pick another payment option.
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={[styles.section, shadow.card]}>
@@ -213,13 +250,20 @@ export default function CheckoutScreen() {
 
       <View style={styles.footer}>
         <View>
-          <Text style={styles.footerSub}>{paymentMethod === 'cod' ? 'PAY ON DELIVERY' : 'PAYING NOW'}</Text>
+          <Text style={styles.footerSub}>
+            {paymentMethod === 'cod'
+              ? 'PAY ON DELIVERY'
+              : paymentMethod === 'wallet'
+                ? 'WALLET PAYMENT'
+                : 'PAYING NOW'}
+          </Text>
           <Text style={styles.footerTotal}>{inr(total)}</Text>
         </View>
         <Button
-          title={placing ? 'Placing…' : 'Place Order'}
+          title={placing ? 'Placing…' : walletInsufficient ? 'Insufficient wallet balance' : 'Place Order'}
           loading={placing}
           onPress={placeOrder}
+          disabled={walletInsufficient}
           style={{ flex: 1, marginLeft: 16 }}
         />
       </View>
@@ -303,4 +347,14 @@ const styles = StyleSheet.create({
   },
   footerTotal: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text },
   footerSub: { fontSize: 10, color: colors.textMuted, fontWeight: '700', letterSpacing: 0.5 },
+  walletWarn: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#fef2f2',
+    padding: 12,
+    borderRadius: radius.md,
+    marginTop: 4,
+  },
+  walletWarnText: { flex: 1, fontSize: fontSize.sm, color: '#b91c1c', fontWeight: '600', lineHeight: 20 },
 });

@@ -70,46 +70,84 @@ const checkout = asyncHandler(async (req, res) => {
     }
   }
 
-  const order = await Order.create({
-    user: req.user._id,
-    items: orderItems,
-    address: address.toObject(),
-    subtotal: totals.subtotal,
-    mrpTotal: totals.mrpTotal,
-    discount: totals.discount,
-    couponCode: totals.coupon ? totals.coupon.code : undefined,
-    couponDiscount: totals.couponDiscount,
-    deliveryFee: totals.deliveryFee,
-    taxes: totals.taxes,
-    total: totals.total,
-    paymentMethod,
-    paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
-    status: 'pending',
-    deliveryType,
-    scheduledFor,
-    notes,
-    timeline: [{ status: 'pending', note: 'Order placed', by: req.user._id }],
-  });
-
-  for (const i of cart.items) {
-    await Product.updateOne({ _id: i.product._id }, { $inc: { stock: -i.quantity } });
-  }
-  if (totals.coupon) {
-    await Coupon.updateOne({ _id: totals.coupon._id }, { $inc: { usedCount: 1 } });
+  let walletDebited = 0;
+  if (paymentMethod === 'wallet') {
+    const paidUser = await User.findOneAndUpdate(
+      { _id: req.user._id, walletBalance: { $gte: totals.total } },
+      { $inc: { walletBalance: -totals.total } },
+      { new: true },
+    );
+    if (!paidUser) {
+      res.status(400);
+      throw new Error('Insufficient wallet balance');
+    }
+    walletDebited = totals.total;
   }
 
-  cart.items = [];
-  cart.couponCode = null;
-  await cart.save();
+  let order;
+  try {
+    order = await Order.create({
+      user: req.user._id,
+      items: orderItems,
+      address: address.toObject(),
+      subtotal: totals.subtotal,
+      mrpTotal: totals.mrpTotal,
+      discount: totals.discount,
+      couponCode: totals.coupon ? totals.coupon.code : undefined,
+      couponDiscount: totals.couponDiscount,
+      deliveryFee: totals.deliveryFee,
+      taxes: totals.taxes,
+      total: totals.total,
+      paymentMethod,
+      paymentStatus:
+        paymentMethod === 'wallet'
+          ? 'paid'
+          : paymentMethod === 'cod'
+            ? 'pending'
+            : 'pending',
+      status: 'pending',
+      deliveryType,
+      scheduledFor,
+      notes,
+      timeline: [{ status: 'pending', note: 'Order placed', by: req.user._id }],
+    });
 
-  await Transaction.create({
-    user: req.user._id,
-    order: order._id,
-    type: 'payment',
-    method: paymentMethod,
-    status: paymentMethod === 'cod' ? 'pending' : 'pending',
-    amount: totals.total,
-  });
+    for (const i of cart.items) {
+      await Product.updateOne({ _id: i.product._id }, { $inc: { stock: -i.quantity } });
+    }
+    if (totals.coupon) {
+      await Coupon.updateOne({ _id: totals.coupon._id }, { $inc: { usedCount: 1 } });
+    }
+
+    cart.items = [];
+    cart.couponCode = null;
+    await cart.save();
+
+    if (paymentMethod === 'wallet') {
+      await Transaction.create({
+        user: req.user._id,
+        order: order._id,
+        type: 'wallet_debit',
+        method: 'wallet',
+        status: 'success',
+        amount: totals.total,
+      });
+    } else {
+      await Transaction.create({
+        user: req.user._id,
+        order: order._id,
+        type: 'payment',
+        method: paymentMethod,
+        status: paymentMethod === 'cod' ? 'pending' : 'pending',
+        amount: totals.total,
+      });
+    }
+  } catch (err) {
+    if (walletDebited > 0) {
+      await User.updateOne({ _id: req.user._id }, { $inc: { walletBalance: walletDebited } });
+    }
+    throw err;
+  }
 
   const io = req.app.get('io');
   if (io) io.to('admin').emit('order:new', { orderId: order._id, orderNumber: order.orderNumber });
@@ -167,6 +205,36 @@ const cancelOrder = asyncHandler(async (req, res) => {
   order.cancelledAt = new Date();
   order.cancelReason = req.body.reason || 'Cancelled by user';
   order.timeline.push({ status: 'cancelled', note: order.cancelReason, by: req.user._id });
+
+  const customerId = order.user._id || order.user;
+
+  // Release rider so they can take new jobs; clear assignment on the order
+  if (order.deliveryPartner) {
+    await DeliveryPartner.updateOne(
+      { user: order.deliveryPartner },
+      { $set: { activeOrder: null, isAvailable: true } },
+    );
+    order.deliveryPartner = null;
+  }
+
+  // Refund to Dailyzo wallet for any prepaid order (wallet, UPI, Razorpay after capture). COD stays pending → no refund.
+  const prepaidCaptured =
+    order.paymentStatus === 'paid' && order.paymentMethod !== 'cod';
+
+  if (prepaidCaptured) {
+    await User.updateOne({ _id: customerId }, { $inc: { walletBalance: order.total } });
+    order.paymentStatus = 'refunded';
+    await Transaction.create({
+      user: customerId,
+      order: order._id,
+      type: 'wallet_credit',
+      method: 'wallet',
+      status: 'success',
+      amount: order.total,
+      meta: { reason: 'order_cancelled', originalPaymentMethod: order.paymentMethod },
+    });
+  }
+
   await order.save();
 
   for (const i of order.items) {
@@ -178,7 +246,9 @@ const cancelOrder = asyncHandler(async (req, res) => {
     io.to(`order:${order._id}`).emit('order:status', { orderId: order._id, status: 'cancelled' });
     io.to('admin').emit('order:status', { orderId: order._id, status: 'cancelled' });
   }
-  res.json({ success: true, order });
+
+  const freshUser = await User.findById(customerId).select('-password');
+  res.json({ success: true, order, user: freshUser });
 });
 
 const updateStatus = asyncHandler(async (req, res) => {
@@ -191,6 +261,10 @@ const updateStatus = asyncHandler(async (req, res) => {
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
+  }
+  if (['cancelled', 'delivered'].includes(order.status)) {
+    res.status(400);
+    throw new Error(`Cannot change status — order is already ${order.status}`);
   }
   order.status = status;
   if (status === 'delivered') {
@@ -220,6 +294,10 @@ const assignDelivery = asyncHandler(async (req, res) => {
   if (!order) {
     res.status(404);
     throw new Error('Order not found');
+  }
+  if (['cancelled', 'delivered'].includes(order.status)) {
+    res.status(400);
+    throw new Error(`Cannot assign delivery — order is ${order.status}`);
   }
   const partner = await DeliveryPartner.findOne({ user: partnerUserId }).populate('user');
   if (!partner) {

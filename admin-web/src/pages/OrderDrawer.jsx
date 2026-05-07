@@ -135,6 +135,8 @@ export default function OrderDrawer({ orderId, onClose, onChanged }) {
                   <div className="font-medium">{order.deliveryPartner.name}</div>
                   <div className="text-slate-500 flex items-center gap-1"><Phone size={12} /> {order.deliveryPartner.phone}</div>
                 </div>
+              ) : ['cancelled', 'delivered'].includes(order.status) ? (
+                <p className="text-sm text-slate-500">This order is closed — assignment is not available.</p>
               ) : (
                 <div className="space-y-2">
                   <p className="text-sm text-slate-500">No partner assigned yet.</p>

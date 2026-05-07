@@ -23,6 +23,23 @@ const remove = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
+/** Active coupons for logged-in customers (mobile app). */
+const listAvailable = asyncHandler(async (req, res) => {
+  const now = Date.now();
+  const raw = await Coupon.find({ isActive: true })
+    .sort('-createdAt')
+    .select('code description type value minOrderValue maxDiscount validFrom validTill')
+    .lean();
+
+  const coupons = raw.filter((c) => {
+    if (c.validFrom && new Date(c.validFrom).getTime() > now) return false;
+    if (c.validTill && new Date(c.validTill).getTime() < now) return false;
+    return true;
+  });
+
+  res.json({ success: true, coupons });
+});
+
 const validate = asyncHandler(async (req, res) => {
   const { code, subtotal = 0 } = req.body;
   const coupon = await Coupon.findOne({ code: (code || '').toUpperCase(), isActive: true });
@@ -43,4 +60,4 @@ const validate = asyncHandler(async (req, res) => {
   res.json({ success: true, coupon, discount });
 });
 
-module.exports = { list, create, update, remove, validate };
+module.exports = { list, listAvailable, create, update, remove, validate };

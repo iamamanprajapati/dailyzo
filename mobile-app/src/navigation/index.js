@@ -18,9 +18,23 @@ import AddAddressScreen from '../screens/AddAddressScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import OrderTrackingScreen from '../screens/OrderTrackingScreen';
 import AccountScreen from '../screens/AccountScreen';
+import CouponsOffersScreen from '../screens/CouponsOffersScreen';
+import WalletScreen from '../screens/WalletScreen';
+import RatingsReviewsScreen from '../screens/RatingsReviewsScreen';
+import ReferEarnScreen from '../screens/ReferEarnScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
+import AboutScreen from '../screens/AboutScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const accountStackHeader = {
+  headerShown: true,
+  headerTintColor: colors.primary,
+  headerTitleStyle: { fontWeight: '800', fontSize: 17 },
+  headerShadowVisible: false,
+  headerStyle: { backgroundColor: '#fff' },
+};
 
 const TAB_ICONS = {
   Home: { active: 'home', inactive: 'home-outline' },
@@ -77,6 +91,12 @@ export default function RootNavigation() {
             <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ headerShown: true, title: 'Checkout' }} />
             <Stack.Screen name="AddAddress" component={AddAddressScreen} options={{ headerShown: true, title: 'Add address' }} />
             <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} options={{ headerShown: true, title: 'Track order' }} />
+            <Stack.Screen name="CouponsOffers" component={CouponsOffersScreen} options={{ ...accountStackHeader, title: 'Coupons & Offers' }} />
+            <Stack.Screen name="Wallet" component={WalletScreen} options={{ ...accountStackHeader, title: 'Dailyzo Wallet' }} />
+            <Stack.Screen name="RatingsReviews" component={RatingsReviewsScreen} options={{ ...accountStackHeader, title: 'Ratings & Reviews' }} />
+            <Stack.Screen name="ReferEarn" component={ReferEarnScreen} options={{ ...accountStackHeader, title: 'Refer & Earn' }} />
+            <Stack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ ...accountStackHeader, title: 'Help & Support' }} />
+            <Stack.Screen name="About" component={AboutScreen} options={{ ...accountStackHeader, title: 'About Dailyzo' }} />
           </>
         )}
       </Stack.Navigator>

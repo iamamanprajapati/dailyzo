@@ -5,6 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import api from '../api/client';
 import { getSocket } from '../api/socket';
+import { useAuth } from '../store/auth';
 import Button from '../components/Button';
 import { colors, fontSize, radius, shadow } from '../theme';
 import { inr, dateTime, statusLabel } from '../utils/format';
@@ -32,6 +33,7 @@ export default function OrderTrackingScreen() {
   const route = useRoute();
   const nav = useNavigation();
   const { orderId } = route.params;
+  const setUser = useAuth((s) => s.setUser);
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,15 @@ export default function OrderTrackingScreen() {
   useEffect(() => {
     const socket = getSocket();
     socket.emit('order:subscribe', { orderId });
-    const onStatus = () => load();
+    const onStatus = async () => {
+      load();
+      try {
+        const { data } = await api.get('/auth/me');
+        setUser(data.user);
+      } catch {
+        /* ignore */
+      }
+    };
     const onLoc = ({ lat, lng }) => setPartnerLoc({ lat, lng });
     socket.on('order:status', onStatus);
     socket.on('partner:location', onLoc);
@@ -60,7 +70,7 @@ export default function OrderTrackingScreen() {
       socket.off('order:status', onStatus);
       socket.off('partner:location', onLoc);
     };
-  }, [orderId]);
+  }, [orderId, setUser]);
 
   if (loading || !order) {
     return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
@@ -74,7 +84,16 @@ export default function OrderTrackingScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await api.post(`/orders/${orderId}/cancel`, { reason: 'Customer cancelled' });
+            const { data } = await api.post(`/orders/${orderId}/cancel`, { reason: 'Customer cancelled' });
+            if (data.user) setUser(data.user);
+            else {
+              try {
+                const me = await api.get('/auth/me');
+                setUser(me.data.user);
+              } catch {
+                /* ignore */
+              }
+            }
             load();
           } catch (err) {
             Alert.alert('Failed', err.response?.data?.message);
