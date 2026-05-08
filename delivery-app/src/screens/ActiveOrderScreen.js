@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, ActivityIndicator,
   Pressable, Linking, Platform, Alert,
@@ -37,12 +37,14 @@ export default function ActiveOrderScreen() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const orderRef = useRef(null);
+  orderRef.current = order;
 
   const orderIdParam = route.params?.orderId;
 
   const { coords } = useLiveLocation({ enabled: isOnDuty && !!order, orderId: order?._id });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const { data } = orderIdParam
         ? await api.get(`/orders/${orderIdParam}`)
@@ -51,15 +53,29 @@ export default function ActiveOrderScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderIdParam]);
 
   useEffect(() => {
     load();
     const socket = getSocket();
-    const onStatus = () => load();
+    const onStatus = async (payload) => {
+      if (payload?.status === 'cancelled') {
+        const oid = payload.orderId != null ? String(payload.orderId) : '';
+        const cur = orderRef.current;
+        const matchesOrder =
+          (orderIdParam && oid === String(orderIdParam)) ||
+          (cur && oid === String(cur._id));
+        if (matchesOrder) {
+          setOrder(null);
+          Alert.alert('Order cancelled', 'The customer cancelled this order.');
+          return;
+        }
+      }
+      load();
+    };
     socket.on('order:status', onStatus);
     return () => socket.off('order:status', onStatus);
-  }, [orderIdParam]);
+  }, [orderIdParam, load]);
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>;
 

@@ -9,6 +9,7 @@ router.get('/me', c.myOrders);
 router.get('/admin', authorize('admin'), c.adminListOrders);
 router.get('/delivery/active', authorize('delivery'), c.deliveryActiveOrder);
 router.get('/delivery/history', authorize('delivery'), c.deliveryHistory);
+router.post('/:id/accept', authorize('delivery'), c.acceptDeliveryOrder);
 router.get('/:id', c.getOrder);
 router.post('/:id/cancel', c.cancelOrder);
 router.patch('/:id/status', authorize('admin', 'delivery'), c.updateStatus);

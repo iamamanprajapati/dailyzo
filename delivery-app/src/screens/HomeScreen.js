@@ -42,15 +42,17 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const socket = getSocket();
-    const onAssign = ({ orderId }) => {
-      Alert.alert('🚀 New order!', 'A new order has been assigned to you.', [
-        { text: 'View', onPress: () => nav.navigate('ActiveOrder', { orderId }) },
-      ]);
-      load();
+    const onAssign = () => load();
+    const onStatus = (payload) => {
+      if (payload?.status === 'cancelled') load();
     };
     socket.on('order:assigned', onAssign);
-    return () => socket.off('order:assigned', onAssign);
-  }, [nav, load]);
+    socket.on('order:status', onStatus);
+    return () => {
+      socket.off('order:assigned', onAssign);
+      socket.off('order:status', onStatus);
+    };
+  }, [load]);
 
   const toggleDuty = async (next) => {
     setDuty(next);

@@ -11,6 +11,7 @@ import HomeScreen from '../screens/HomeScreen';
 import ActiveOrderScreen from '../screens/ActiveOrderScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import OrderOfferLayer from '../components/OrderOfferLayer';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -31,27 +32,30 @@ function renderTabIcon(name, color, focused) {
 
 function MainTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: {
-          borderTopColor: colors.border,
-          paddingTop: 8,
-          paddingBottom: 10,
-          height: 68,
-          backgroundColor: '#fff',
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
-        tabBarIcon: ({ color, focused }) => renderTabIcon(route.name, color, focused),
-      })}
-    >
+    <>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textMuted,
+          tabBarStyle: {
+            borderTopColor: colors.border,
+            paddingTop: 8,
+            paddingBottom: 10,
+            height: 68,
+            backgroundColor: '#fff',
+          },
+          tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+          tabBarIcon: ({ color, focused }) => renderTabIcon(route.name, color, focused),
+        })}
+      >
       <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: 'Home' }} />
       <Tab.Screen name="ActiveTab" component={ActiveOrderScreen} options={{ title: 'Active' }} />
       <Tab.Screen name="History" component={HistoryScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+      <OrderOfferLayer />
+    </>
   );
 }
 

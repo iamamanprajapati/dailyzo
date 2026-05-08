@@ -11,6 +11,87 @@ const DELIVERY_FEE_THRESHOLD = 199;
 const DELIVERY_FEE = 25;
 const TAX_RATE = 0.05;
 
+/** orderId (string) -> User ids (strings) who received `order:offer` for that order */
+const dispatchOfferRecipients = new Map();
+
+const MAX_DISPATCH_RADIUS_M = 25_000;
+const MAX_DISPATCH_PARTNERS = 20;
+
+function withdrawOrderOffers(io, orderId, winnerUserId) {
+  if (!io) return;
+  const key = orderId.toString();
+  const recipients = dispatchOfferRecipients.get(key);
+  dispatchOfferRecipients.delete(key);
+  if (!recipients?.length) return;
+  const win = winnerUserId != null ? winnerUserId.toString() : null;
+  for (const uid of recipients) {
+    if (win && uid === win) continue;
+    io.to(`user:${uid}`).emit('order:offer:withdraw', { orderId: key });
+  }
+}
+
+async function broadcastOrderOffers(io, orderDoc) {
+  if (!io) return;
+
+  const coords = orderDoc.address?.location?.coordinates;
+  const payloadBase = {
+    orderId: orderDoc._id.toString(),
+    orderNumber: orderDoc.orderNumber,
+    total: orderDoc.total,
+    dropLat: coords?.[1],
+    dropLng: coords?.[0],
+    itemsCount: orderDoc.items?.length || 0,
+  };
+
+  let partners = [];
+
+  if (
+    coords &&
+    typeof coords[0] === 'number' &&
+    typeof coords[1] === 'number' &&
+    !(coords[0] === 0 && coords[1] === 0)
+  ) {
+    const [lng, lat] = coords;
+    partners = await DeliveryPartner.find({
+      isAvailable: true,
+      isOnDuty: true,
+      activeOrder: null,
+      currentLocation: {
+        $nearSphere: {
+          $geometry: { type: 'Point', coordinates: [lng, lat] },
+          $maxDistance: MAX_DISPATCH_RADIUS_M,
+        },
+      },
+    })
+      .limit(MAX_DISPATCH_PARTNERS)
+      .populate('user', 'name');
+    partners = partners.filter((p) => {
+      const c = p.currentLocation?.coordinates;
+      return c && !(c[0] === 0 && c[1] === 0);
+    });
+  }
+
+  if (partners.length === 0) {
+    partners = await DeliveryPartner.find({
+      isAvailable: true,
+      isOnDuty: true,
+      activeOrder: null,
+    })
+      .limit(MAX_DISPATCH_PARTNERS)
+      .populate('user', 'name');
+  }
+
+  const ids = [];
+  for (const p of partners) {
+    if (!p.user?._id) continue;
+    const uid = p.user._id.toString();
+    ids.push(uid);
+    io.to(`user:${p.user._id}`).emit('order:offer', payloadBase);
+  }
+
+  if (ids.length) dispatchOfferRecipients.set(orderDoc._id.toString(), ids);
+}
+
 async function computeTotals({ items, couponCode }) {
   let subtotal = 0;
   let mrpTotal = 0;
@@ -150,7 +231,10 @@ const checkout = asyncHandler(async (req, res) => {
   }
 
   const io = req.app.get('io');
-  if (io) io.to('admin').emit('order:new', { orderId: order._id, orderNumber: order.orderNumber });
+  if (io) {
+    io.to('admin').emit('order:new', { orderId: order._id, orderNumber: order.orderNumber });
+    await broadcastOrderOffers(io, order);
+  }
 
   res.status(201).json({ success: true, order });
 });
@@ -207,6 +291,7 @@ const cancelOrder = asyncHandler(async (req, res) => {
   order.timeline.push({ status: 'cancelled', note: order.cancelReason, by: req.user._id });
 
   const customerId = order.user._id || order.user;
+  const notifyPartnerId = order.deliveryPartner;
 
   // Release rider so they can take new jobs; clear assignment on the order
   if (order.deliveryPartner) {
@@ -243,8 +328,13 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
   const io = req.app.get('io');
   if (io) {
-    io.to(`order:${order._id}`).emit('order:status', { orderId: order._id, status: 'cancelled' });
-    io.to('admin').emit('order:status', { orderId: order._id, status: 'cancelled' });
+    withdrawOrderOffers(io, order._id, null);
+    const payload = { orderId: order._id, status: 'cancelled' };
+    io.to(`order:${order._id}`).emit('order:status', payload);
+    if (notifyPartnerId) {
+      io.to(`user:${notifyPartnerId}`).emit('order:status', payload);
+    }
+    io.to('admin').emit('order:status', payload);
   }
 
   const freshUser = await User.findById(customerId).select('-password');
@@ -320,10 +410,70 @@ const assignDelivery = asyncHandler(async (req, res) => {
 
   const io = req.app.get('io');
   if (io) {
+    withdrawOrderOffers(io, order._id, partner.user._id);
     io.to(`order:${order._id}`).emit('order:status', { orderId: order._id, status: 'assigned' });
     io.to(`user:${partner.user._id}`).emit('order:assigned', { orderId: order._id });
     io.to('admin').emit('order:status', { orderId: order._id, status: 'assigned' });
   }
+  res.json({ success: true, order });
+});
+
+const acceptDeliveryOrder = asyncHandler(async (req, res) => {
+  const partner = await DeliveryPartner.findOne({ user: req.user._id }).populate('user');
+  if (!partner?.user) {
+    res.status(404);
+    throw new Error('Delivery profile not found');
+  }
+  if (!partner.isOnDuty) {
+    res.status(400);
+    throw new Error('Go on duty to accept orders');
+  }
+  if (partner.activeOrder) {
+    res.status(409);
+    throw new Error('Finish your active order before accepting another');
+  }
+
+  const orderId = req.params.id;
+  const order = await Order.findOneAndUpdate(
+    {
+      _id: orderId,
+      deliveryPartner: null,
+      status: { $in: ['pending', 'confirmed', 'packed'] },
+    },
+    {
+      $set: {
+        deliveryPartner: req.user._id,
+        status: 'assigned',
+      },
+      $push: {
+        timeline: {
+          status: 'assigned',
+          note: `Accepted by ${partner.user.name}`,
+          by: req.user._id,
+        },
+      },
+    },
+    { new: true },
+  ).populate('user', 'name phone');
+
+  if (!order) {
+    res.status(409);
+    throw new Error('Order is no longer available');
+  }
+
+  partner.isAvailable = false;
+  partner.isOnDuty = true;
+  partner.activeOrder = order._id;
+  await partner.save();
+
+  const io = req.app.get('io');
+  if (io) {
+    withdrawOrderOffers(io, order._id, req.user._id);
+    io.to(`order:${order._id}`).emit('order:status', { orderId: order._id, status: 'assigned' });
+    io.to(`user:${req.user._id}`).emit('order:assigned', { orderId: order._id });
+    io.to('admin').emit('order:status', { orderId: order._id, status: 'assigned' });
+  }
+
   res.json({ success: true, order });
 });
 
@@ -375,6 +525,7 @@ module.exports = {
   cancelOrder,
   updateStatus,
   assignDelivery,
+  acceptDeliveryOrder,
   adminListOrders,
   deliveryActiveOrder,
   deliveryHistory,
