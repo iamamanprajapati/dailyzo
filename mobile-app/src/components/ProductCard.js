@@ -57,7 +57,7 @@ export default function ProductCard({ product, onPress }) {
           <Image
             source={{ uri: product.images[0] }}
             style={[styles.image, soldOut && styles.imageDimmed]}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]}>
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   imageCountText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  imageWrap: { aspectRatio: 1, backgroundColor: colors.surface, padding: 8, position: 'relative' },
+  imageWrap: { aspectRatio: 1, backgroundColor: colors.surface, overflow: 'hidden', position: 'relative' },
   image: { width: '100%', height: '100%' },
   imageDimmed: { opacity: 0.35 },
   imagePlaceholder: { backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },

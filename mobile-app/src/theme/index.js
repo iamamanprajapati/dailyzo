@@ -25,10 +25,6 @@ export const fontSize = { xs: 11, sm: 12, md: 14, lg: 16, xl: 18, xxl: 22, hero:
 
 export const shadow = {
   card: {
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
     elevation: 3,
   },
   big: {

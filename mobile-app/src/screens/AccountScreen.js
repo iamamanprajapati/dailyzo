@@ -10,14 +10,14 @@ import Button from '../components/Button';
 import { colors, fontSize, radius, shadow } from '../theme';
 
 const ITEMS = [
-  { icon: 'receipt-outline', label: 'My Orders', screen: 'Orders', color: '#3b82f6' },
-  { icon: 'location-outline', label: 'Saved Addresses', screen: 'AddAddress', color: '#10b981' },
-  { icon: 'pricetag-outline', label: 'Coupons & Offers', screen: 'CouponsOffers', color: '#f59e0b' },
-  { icon: 'wallet-outline', label: 'Dailyzo Wallet', screen: 'Wallet', color: '#8b5cf6' },
-  { icon: 'star-outline', label: 'Ratings & Reviews', screen: 'RatingsReviews', color: '#f97316' },
-  { icon: 'gift-outline', label: 'Refer & Earn', screen: 'ReferEarn', color: '#ec4899' },
-  { icon: 'chatbubble-ellipses-outline', label: 'Help & Support', screen: 'HelpSupport', color: '#06b6d4' },
-  { icon: 'information-circle-outline', label: 'About Dailyzo', screen: 'About', color: '#64748b' },
+  { icon: 'receipt-outline', label: 'My Orders', screen: 'Orders' },
+  { icon: 'location-outline', label: 'Saved Addresses', screen: 'AddAddress' },
+  { icon: 'pricetag-outline', label: 'Coupons & Offers', screen: 'CouponsOffers' },
+  { icon: 'wallet-outline', label: 'Dailyzo Wallet', screen: 'Wallet' },
+  { icon: 'star-outline', label: 'Ratings & Reviews', screen: 'RatingsReviews' },
+  { icon: 'gift-outline', label: 'Refer & Earn', screen: 'ReferEarn' },
+  { icon: 'chatbubble-ellipses-outline', label: 'Help & Support', screen: 'HelpSupport' },
+  { icon: 'information-circle-outline', label: 'About Dailyzo', screen: 'About' },
 ];
 
 export default function AccountScreen() {
@@ -66,7 +66,7 @@ export default function AccountScreen() {
       }
     >
       <LinearGradient colors={['#dcfce7', '#fff']} style={styles.header}>
-        <View style={[styles.avatar, shadow.card]}>
+        <View style={[styles.avatar]}>
           <Text style={{ fontSize: 30, color: colors.primaryDark, fontWeight: '800' }}>{user.name?.[0]}</Text>
         </View>
         <Text style={styles.name}>{user.name}</Text>
@@ -76,7 +76,7 @@ export default function AccountScreen() {
         </View>
       </LinearGradient>
 
-      <View style={[styles.statsRow, shadow.card]}>
+      <View style={[styles.statsRow]}>
         <Stat icon="cube-outline" label="Orders" value="View" onPress={() => nav.navigate('Tabs', { screen: 'Orders' })} />
         <View style={styles.statDivider} />
         <Stat icon="wallet-outline" label="Wallet" value={`₹${user.walletBalance ?? 0}`} onPress={() => nav.navigate('Wallet')} />
@@ -84,7 +84,7 @@ export default function AccountScreen() {
         <Stat icon="location-outline" label="Addresses" value={user.addresses?.length || 0} onPress={() => nav.navigate('AddAddress')} />
       </View>
 
-      <View style={[styles.menu, shadow.card]}>
+      <View style={styles.menuCard}>
         {ITEMS.map((item, idx) => {
           const isLast = idx === ITEMS.length - 1;
           return (
@@ -92,8 +92,8 @@ export default function AccountScreen() {
               key={item.label}
               style={({ pressed }) => [
                 styles.menuRow,
-                isLast && { borderBottomWidth: 0 },
-                pressed && { backgroundColor: colors.surface },
+                !isLast && styles.menuRowBorder,
+                pressed && styles.menuRowPressed,
               ]}
               onPress={() => {
                 if (!item.screen) return;
@@ -101,8 +101,8 @@ export default function AccountScreen() {
                 else nav.navigate(item.screen);
               }}
             >
-              <View style={[styles.menuIconBox, { backgroundColor: item.color + '18' }]}>
-                <Ionicons name={item.icon} size={18} color={item.color} />
+              <View style={styles.menuIconBox}>
+                <Ionicons name={item.icon} size={20} color={colors.primaryDark} />
               </View>
               <Text style={styles.menuLabel}>{item.label}</Text>
               <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
@@ -161,14 +161,43 @@ const styles = StyleSheet.create({
   statValue: { fontSize: fontSize.md, fontWeight: '800', marginTop: 6, color: colors.text },
   statLabel: { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
   statDivider: { width: 1, backgroundColor: colors.border, marginVertical: 4 },
-  menu: { backgroundColor: '#fff', marginHorizontal: 12, marginTop: 16, borderRadius: radius.lg, overflow: 'hidden' },
-  menuRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 14, paddingHorizontal: 14,
-    borderBottomWidth: 1, borderColor: colors.border,
+  menuCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 12,
+    marginTop: 16,
+    borderRadius: radius.xl + 2,
+    overflow: 'hidden',
+    borderColor: colors.border,
+    borderWidth: .5,
   },
-  menuIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { flex: 1, fontSize: fontSize.md, color: colors.text, fontWeight: '600' },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+  },
+  menuRowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  menuRowPressed: { backgroundColor: colors.surfaceAlt },
+  menuIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: '#ecfdf5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  menuLabel: {
+    flex: 1,
+    fontSize: fontSize.md,
+    color: colors.text,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
   versionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 4 },
   version: { textAlign: 'center', color: colors.textLight, fontSize: fontSize.xs },
 });

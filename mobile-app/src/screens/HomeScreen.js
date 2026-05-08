@@ -267,9 +267,8 @@ const styles = StyleSheet.create({
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 8 },
   catItem: { width: '25%', alignItems: 'center', padding: 8 },
   catImageWrap: {
-    width: 70, height: 70, borderRadius: 18, backgroundColor: '#fff',
-    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-    borderWidth: 1, borderColor: colors.border, padding: 6,
+    width: 70, height: 70,
+    alignItems: 'center', justifyContent: 'center'
   },
   catImage: { width: '100%', height: '100%', borderRadius: 12 },
   catName: { fontSize: fontSize.xs, color: colors.text, textAlign: 'center', marginTop: 8, fontWeight: '600' },

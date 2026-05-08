@@ -33,9 +33,9 @@ export default function ImageCarousel({ images = [], height, badges = [] }) {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onScroll}
         renderItem={({ item }) => (
-          <View style={{ width: itemWidth, height: itemHeight, backgroundColor: '#fff' }}>
+          <View style={[styles.slide, { width: itemWidth, height: itemHeight }]}>
             {item ? (
-              <Image source={{ uri: item }} style={styles.image} resizeMode="contain" />
+              <Image source={{ uri: item }} style={styles.image} resizeMode="cover" />
             ) : (
               <View style={[styles.image, styles.empty]}>
                 <Ionicons name="image-outline" size={64} color={colors.textLight} />
@@ -78,7 +78,11 @@ export default function ImageCarousel({ images = [], height, badges = [] }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { width: '100%', backgroundColor: '#fff', position: 'relative' },
+  wrap: { width: '100%', backgroundColor: colors.surface, position: 'relative' },
+  slide: {
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+  },
   image: { width: '100%', height: '100%' },
   empty: { backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   badgeStack: {
